@@ -1,0 +1,19 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: denoland/setup-deno@v1
+      - uses: jurassiscripts/setup-velociraptor@v1
+      - name: Create env file
+        run: |
+          touch .env
+          echo SAMPLE_TOKEN=sample_token >> .env
+      - name: Run CI
+        env:
+          VR_HOOKS: "false"
+        run: vr ci
