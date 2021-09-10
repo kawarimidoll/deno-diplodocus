@@ -1,37 +1,14 @@
 /// <reference path="./_deploy.d.ts" />
 
-import { Marked } from "./deps.ts";
+import { httpStatusText, lookupMimeType, Marked } from "./deps.ts";
 
-const MIME_TYPES: Record<string, string> = {
-  avif: "image/avif",
-  css: "text/css",
-  gif: "image/gif",
-  gz: "application/gzip",
-  htm: "text/html",
-  html: "text/html",
-  yml: "text/yaml",
-  yaml: "text/yaml",
-  ico: "image/x-icon",
-  jpeg: "image/jpeg",
-  jpg: "image/jpeg",
-  js: "application/javascript",
-  xml: "application/xml",
-  toml: "application/toml",
-  json: "application/json",
-  jsx: "text/jsx",
-  map: "application/json",
-  md: "text/markdown",
-  mjs: "application/javascript",
-  png: "image/png",
-  apng: "image/apng",
-  bmp: "image/bmp",
-  svg: "image/svg+xml",
-  ts: "text/typescript",
-  tsx: "text/tsx",
-  txt: "text/plain",
-  wasm: "application/wasm",
-  webp: "image/webp",
-};
+function genResponseArgs(
+  status: number,
+  init?: ResponseInit,
+): [BodyInit, ResponseInit] {
+  const statusText = `${httpStatusText(status)}`;
+  return [`${status}: ${statusText}`, { ...(init || {}), status, statusText }];
+}
 
 const sourceDir = "docs";
 
@@ -48,6 +25,27 @@ async function handleConn(conn: Deno.Conn) {
   }
 }
 
+async function readData(filePath: string, parseMd = false): Promise<BodyInit> {
+  try {
+    const data = await Deno.readFile(filePath);
+
+    if (filePath.endsWith(".md") && parseMd) {
+      return Marked.parse(new TextDecoder().decode(data)).content;
+    }
+
+    return data;
+  } catch (error) {
+    const subject = `${error}`.split(":")[0];
+
+    if (subject === "NotFound" && filePath.endsWith(".html")) {
+      return readData(filePath.replace("html", "md"), true);
+    }
+
+    // in other cases, throw error transparency
+    throw error;
+  }
+}
+
 async function handler(request: Request) {
   const url = new URL(request.url);
   const { href, origin, host, hash, search } = url;
@@ -56,37 +54,34 @@ async function handler(request: Request) {
   console.log({ href, origin, host, pathname, hash, search });
 
   if (pathname === "/") {
-    pathname += "index.md";
+    pathname += "index";
   } else if (pathname.endsWith("/")) {
-    return new Response("302: Found", {
-      status: 302,
-      headers: { location: pathname.replace(/\/$/, "") },
-    });
+    return new Response(
+      ...genResponseArgs(302, {
+        headers: { location: pathname.slice(0, -1) },
+      }),
+    );
   }
 
-  let ext = pathname.includes(".") ? pathname.split(".").at(-1) : "";
+  const tailPath = pathname.split("/").at(-1) || "";
+  let ext = tailPath.includes(".") ? tailPath.split(".").at(-1) : "";
+
   if (!ext) {
-    pathname += ".md";
-    ext = "md";
+    pathname += ".html";
+    ext = "html";
   }
 
-  let mimeType = MIME_TYPES[ext];
-
-  console.log({ pathname, ext, mimeType });
-  if (!mimeType) {
-    return new Response("400: Bad request.", { status: 400 });
-  }
-
+  const mimeType = lookupMimeType(ext);
   const filePath = `${sourceDir}${pathname}`;
-  console.log({ pathname, ext, filePath });
+
+  console.log({ pathname, ext, mimeType, filePath });
+
+  if (!mimeType) {
+    return new Response(...genResponseArgs(400));
+  }
 
   try {
-    let data: BodyInit = await Deno.readFile(filePath);
-
-    if (ext === "md") {
-      data = Marked.parse(new TextDecoder().decode(data)).content;
-      mimeType = MIME_TYPES.html;
-    }
+    const data = await readData(filePath);
 
     return new Response(data, {
       headers: { "content-type": mimeType },
@@ -96,10 +91,10 @@ async function handler(request: Request) {
 
     const subject = `${error}`.split(":")[0];
     if (subject === "NotFound") {
-      return new Response("404: Not found", { status: 404 });
+      return new Response(...genResponseArgs(404));
     }
 
-    return new Response("500: Internal server error", { status: 500 });
+    return new Response(...genResponseArgs(500));
   }
 }
 
