@@ -1,0 +1,31 @@
+{
+  "sourceDir": "docs",
+  "siteName": "diplodocus",
+
+  "navLinks": [
+    { "path": "/about", "title": "About" },
+    { "title": "Lorem", "path": "/lorem" },
+    {
+      "title": "Links",
+      "items": [
+        { "path": "https://github.com", "title": "GitHub" },
+        { "path": "https://twitter.com", "title": "Twitter" }
+      ]
+    }
+  ],
+
+  "listPages": [
+    {
+      "title": "Lorem",
+      "path": "/lorem",
+      "items": [
+        { "path": "/lorem/01", "title": "Lorem 01" },
+        { "path": "/lorem/02", "title": "Lorem 02" },
+        { "path": "/lorem/03", "title": "Lorem 03" },
+        { "path": "/lorem/04", "title": "Lorem 04" },
+        { "path": "/lorem/05", "title": "Lorem 05" },
+        { "path": "/lorem/06", "title": "Lorem 06" }
+      ]
+    }
+  ]
+}

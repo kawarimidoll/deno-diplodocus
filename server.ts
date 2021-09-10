@@ -10,42 +10,93 @@ function genResponseArgs(
   return [`${status}: ${statusText}`, { ...(init || {}), status, statusText }];
 }
 
-const sourceDir = "docs";
-const siteName = "diplodocus";
-
-const navLinks: Array<NavLink> = [
-  { path: "/about", title: "About" },
-  {
-    title: "Lorem",
-    items: [
-      { path: "/lorem/01", title: "Lorem 01" },
-      { path: "/lorem/02", title: "Lorem 02" },
-      { path: "/lorem/03", title: "Lorem 03" },
-      { path: "/lorem/04", title: "Lorem 04" },
-      { path: "/lorem/05", title: "Lorem 05" },
-      { path: "/lorem/06", title: "Lorem 06" },
-    ],
-  },
-];
-
+const defaultConfig = {
+  sourceDir: "docs",
+  siteName: "diplodocus",
+  navLinks: [] as Array<NavLink>,
+  listPages: [] as Array<ListPage>,
+};
 type NavLink = {
   title: string;
   path?: string;
   items?: Array<NavLink>;
 };
+type ListPage = {
+  title: string;
+  path: string;
+  items: Array<PageLink>;
+};
+type PageLink = {
+  title: string;
+  path: string;
+};
+type PageMeta = {
+  prev?: PageLink;
+  next?: PageLink;
+  date?: string;
+  tag?: Array<string>;
+};
+
+type Config = typeof defaultConfig;
+type UserConfig = Partial<Config>;
+
+async function getConfig(path: string): Promise<Config> {
+  let userConfig: UserConfig = {};
+  try {
+    userConfig = JSON.parse(await Deno.readTextFile(path)) as UserConfig;
+  } catch (error) {
+    console.warn("getConfig failed");
+    console.warn(error);
+  }
+  return { ...defaultConfig, ...userConfig };
+}
+
+const {
+  sourceDir,
+  siteName,
+  navLinks,
+  listPages,
+} = await getConfig("./diplodocus.json");
 
 function genNavbar(links: Array<NavLink>): string {
   return h(
     "ul",
-    ...links.map(({ path = "#", title, items }) =>
+    ...links.map(({ path, title, items }) =>
       items
         ? h("li", h("span", title), genNavbar(items))
-        : h("li", h("a", { href: path }, title))
+        : h("li", h("a", { href: path || "#" }, title))
     ),
   );
 }
 
-function renderPage(content: string): string {
+const storedPages: Record<string, string> = {};
+type Neighbors = {
+  prev?: PageLink;
+  next?: PageLink;
+};
+const pageNeighbors: Record<string, Neighbors> = {};
+listPages.forEach(({ title, path, items }) => {
+  // generate list pages
+  storedPages[`${sourceDir}${path}.md`] = "# " + title + "\n" +
+    items.map(({ title, path }) => `- [${title}](${path})`).join("\n");
+
+  items.forEach(({ path }, idx) => {
+    const filePath = `${sourceDir}${path}.md`;
+
+    pageNeighbors[filePath] = {};
+
+    if (items[idx - 1]) {
+      pageNeighbors[filePath].prev = items[idx - 1];
+    }
+    if (items[idx + 1]) {
+      pageNeighbors[filePath].next = items[idx + 1];
+    }
+  });
+});
+
+console.log({ listPages, storedPages, pageNeighbors });
+
+function renderPage(content: string, _meta: PageMeta): string {
   return "<!DOCTYPE html>" +
     h(
       "html",
@@ -103,13 +154,30 @@ async function handleConn(conn: Deno.Conn) {
 }
 
 async function readData(filePath: string, parseMd = false): Promise<BodyInit> {
+  console.log({ filePath, parseMd });
+  const storedPage = storedPages[filePath];
+  if (storedPage) {
+    const { content, meta } = Marked.parse(storedPage);
+    console.log({ meta });
+    return renderPage(content, meta);
+  }
+
   try {
     const data = await Deno.readFile(filePath);
 
     if (filePath.endsWith(".md") && parseMd) {
-      const { content, meta } = Marked.parse(new TextDecoder().decode(data));
+      let md = new TextDecoder().decode(data);
+      const neighbors = pageNeighbors[filePath];
+      if (neighbors?.prev) {
+        md += "\n" + `- [${neighbors.prev.title}](${neighbors.prev.path})`;
+      }
+      if (neighbors?.next) {
+        md += "\n" + `- [${neighbors.next.title}](${neighbors.next.path})`;
+      }
+      const { content, meta } = Marked.parse(md);
       console.log({ meta });
-      return renderPage(content);
+
+      return renderPage(content, meta);
     }
 
     return data;
