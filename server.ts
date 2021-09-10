@@ -1,6 +1,6 @@
 /// <reference path="./_deploy.d.ts" />
 
-import { httpStatusText, lookupMimeType, Marked } from "./deps.ts";
+import { httpStatusText, lookupMimeType, Marked, tag as h } from "./deps.ts";
 
 function genResponseArgs(
   status: number,
@@ -11,6 +11,83 @@ function genResponseArgs(
 }
 
 const sourceDir = "docs";
+const siteName = "diplodocus";
+
+const navLinks: Array<NavLink> = [
+  { path: "/about", title: "About" },
+  {
+    title: "Lorem",
+    items: [
+      { path: "/lorem/01", title: "Lorem 01" },
+      { path: "/lorem/02", title: "Lorem 02" },
+      { path: "/lorem/03", title: "Lorem 03" },
+      { path: "/lorem/04", title: "Lorem 04" },
+      { path: "/lorem/05", title: "Lorem 05" },
+      { path: "/lorem/06", title: "Lorem 06" },
+    ],
+  },
+];
+
+type NavLink = {
+  title: string;
+  path?: string;
+  items?: Array<NavLink>;
+};
+
+function genNavbar(links: Array<NavLink>): string {
+  return h(
+    "ul",
+    ...links.map(({ path = "#", title, items }) =>
+      items
+        ? h("li", h("span", title), genNavbar(items))
+        : h("li", h("a", { href: path }, title))
+    ),
+  );
+}
+
+function renderPage(content: string): string {
+  return "<!DOCTYPE html>" +
+    h(
+      "html",
+      h(
+        "head",
+        h("meta", { charset: "UTF-8" }),
+        h("title", siteName),
+        h("meta", {
+          name: "viewport",
+          content: "width=device-width,initial-scale=1.0,minimum-scale=1.0",
+        }),
+        h("link", {
+          rel: "icon",
+          // type: "image/png",
+          href: "https://twemoji.maxcdn.com/v/13.1.0/72x72/1f4e6.png",
+        }),
+        h("link", {
+          rel: "stylesheet",
+          href: "https://cdn.jsdelivr.net/npm/holiday.css@0.9.8",
+        }),
+      ),
+      h(
+        "body",
+        h(
+          "header",
+          h("h1", { id: "site-name" }, h("a", { href: "/" }, siteName)),
+          h("div", "this is description"),
+        ),
+        h("nav", { id: "header-nav" }, genNavbar(navLinks)),
+        h("main", content),
+        h(
+          "footer",
+          "Powered by ",
+          h(
+            "a",
+            { href: "https://github.com/kawarimidoll/deno-diplodocus" },
+            "diplodocus",
+          ),
+        ),
+      ),
+    );
+}
 
 const listener = Deno.listen({ port: 8080 });
 if (!Deno.env.get("DENO_DEPLOYMENT_ID")) {
@@ -30,7 +107,9 @@ async function readData(filePath: string, parseMd = false): Promise<BodyInit> {
     const data = await Deno.readFile(filePath);
 
     if (filePath.endsWith(".md") && parseMd) {
-      return Marked.parse(new TextDecoder().decode(data)).content;
+      const { content, meta } = Marked.parse(new TextDecoder().decode(data));
+      console.log({ meta });
+      return renderPage(content);
     }
 
     return data;
