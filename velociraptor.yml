@@ -1,12 +1,3 @@
-# allow:
-#   - write
-#   - read
-#   - net
-#   - env
-
-# envFile:
-#   - .env
-
 scripts:
   main:
     desc: Runs main script
