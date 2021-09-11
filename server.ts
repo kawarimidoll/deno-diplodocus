@@ -30,7 +30,7 @@ function genResponseArgs(
 
 const defaultConfig = {
   sourceDir: "docs",
-  siteName: "diplodocus",
+  siteName: "Diplodocus",
   navLinks: [] as Array<NavLink>,
   listPages: [] as Array<ListPage>,
 };
@@ -49,10 +49,11 @@ type PageLink = {
   path: string;
 };
 type PageMeta = {
-  prev?: PageLink;
-  next?: PageLink;
+  prev?: string;
+  next?: string;
   date?: string;
   tag?: Array<string>;
+  toc?: string;
 };
 
 type Config = typeof defaultConfig;
@@ -95,8 +96,13 @@ type Neighbors = {
 const pageNeighbors: Record<string, Neighbors> = {};
 listPages.forEach(({ title, path, items }) => {
   // generate list pages
-  storedPages[`${sourceDir}${path}.md`] = "# " + title + "\n" +
-    items.map(({ title, path }) => `- [${title}](${path})`).join("\n");
+  storedPages[`${sourceDir}${path}.md`] = [
+    "---",
+    "toc: false",
+    "---",
+    `# ${title}`,
+    ...items.map(({ title, path }) => `- [${title}](${path})`),
+  ].join("\n");
 
   items.forEach(({ path }, idx) => {
     const filePath = `${sourceDir}${path}.md`;
@@ -117,21 +123,25 @@ console.log({ listPages, storedPages, pageNeighbors });
 function prismJs(path: string) {
   return `https://cdn.jsdelivr.net/npm/prismjs@1.24.1/${path}`;
 }
-function renderPage(content: string, _meta: PageMeta): string {
+function renderPage(content: string, meta: PageMeta): string {
+  const { toc } = meta;
   const regex = /<h([123456]) [^>]*id="([^"]+)"[^>]*>([^<]*)<\/h[123456]>/g;
   let minLevel = 6;
-  const tocMd = (content.match(regex) || []).map((matched) => {
-    const [levelStr, id] = (matched.replace(regex, "$1 $2") || "").split(" ");
-    const level = Number(levelStr);
-    if (level < minLevel) {
-      minLevel = level;
-    }
-    const text = matched.replace(/<[^>]*>/g, "");
-    return `${"  ".repeat(level)}- [${text}](#${id})`;
-  }).map((str) => str.slice(minLevel * 2)).join("\n");
 
-  const toc = Marked.parse(tocMd).content;
-  console.log({ tocMd, toc });
+  const tocMd = toc
+    ? (content.match(regex) || []).map((matched) => {
+      const [levelStr, id] = (matched.replace(regex, "$1 $2") || "").split(" ");
+      const level = Number(levelStr);
+      if (level < minLevel) {
+        minLevel = level;
+      }
+      const text = matched.replace(/<[^>]*>/g, "");
+      return `${"  ".repeat(level)}- [${text}](#${id})`;
+    }).map((str) => str.slice(minLevel * 2)).join("\n")
+    : "";
+
+  const tocHtml = Marked.parse(tocMd).content;
+  console.log({ tocMd, meta, tocHtml });
 
   return "<!DOCTYPE html>" +
     h(
@@ -159,21 +169,18 @@ function renderPage(content: string, _meta: PageMeta): string {
           integrity: "sha256-0dkohC9ZEupqWbq0hS5cVR4QQXJ+mp6N2oJyuks6gt0=",
           crossorigin: "anonymous",
         }),
+        h("style", "#table-of-contents{margin:2rem;margin-bottom:0;}"),
       ),
       h(
         "body",
-        h(
-          "header",
-          h("h1", { id: "site-name" }, h("a", { href: "/" }, siteName)),
-          h("div", "this is description"),
-        ),
+        h("header", h("h1", h("a", { href: "/" }, siteName))),
         h("nav", { id: "header-nav" }, genNavbar(navLinks)),
         toc
           ? h(
             "details",
             { id: "table-of-contents" },
             h("summary", "Table of contents"),
-            toc,
+            tocHtml,
           )
           : "",
         h("main", content),
@@ -231,10 +238,12 @@ async function readData(filePath: string, parseMd = false): Promise<BodyInit> {
       let md = new TextDecoder().decode(data);
       const neighbors = pageNeighbors[filePath];
       if (neighbors?.prev) {
-        md += "\n" + `- [${neighbors.prev.title}](${neighbors.prev.path})`;
+        md += "\n" +
+          `- Prev: [${neighbors.prev.title}](${neighbors.prev.path})`;
       }
       if (neighbors?.next) {
-        md += "\n" + `- [${neighbors.next.title}](${neighbors.next.path})`;
+        md += "\n" +
+          `- Next: [${neighbors.next.title}](${neighbors.next.path})`;
       }
       const { content, meta } = Marked.parse(md);
       console.log({ meta });
