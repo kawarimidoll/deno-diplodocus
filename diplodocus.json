@@ -1,9 +1,6 @@
 {
-  "sourceDir": "docs",
-  "siteName": "diplodocus",
-
   "navLinks": [
-    { "path": "/about", "title": "About" },
+    { "title": "Examples", "path": "/examples" },
     { "title": "Lorem", "path": "/lorem" },
     {
       "title": "Links",
@@ -11,7 +8,8 @@
         { "path": "https://github.com", "title": "GitHub" },
         { "path": "https://twitter.com", "title": "Twitter" }
       ]
-    }
+    },
+    { "title": "Acknowledgements", "path": "/acknowledgements" }
   ],
 
   "listPages": [
