@@ -1,6 +1,24 @@
 /// <reference path="./_deploy.d.ts" />
+import {
+  httpStatusText,
+  lookupMimeType,
+  Marked,
+  Renderer,
+  tag as h,
+} from "./deps.ts";
 
-import { httpStatusText, lookupMimeType, Marked, tag as h } from "./deps.ts";
+class MyRenderer extends Renderer {
+  declare options;
+
+  heading(text: string, level: number) {
+    const id = String(text).trim().toLocaleLowerCase().replace(/\s+/g, "-");
+    return `<h${level} id="${id}">${text}</h${level}>`;
+  }
+}
+
+Marked.setOptions({
+  renderer: new MyRenderer(),
+});
 
 function genResponseArgs(
   status: number,
@@ -96,6 +114,9 @@ listPages.forEach(({ title, path, items }) => {
 
 console.log({ listPages, storedPages, pageNeighbors });
 
+function prismJs(path: string) {
+  return `https://cdn.jsdelivr.net/npm/prismjs@1.24.1/${path}`;
+}
 function renderPage(content: string, _meta: PageMeta): string {
   return "<!DOCTYPE html>" +
     h(
@@ -117,6 +138,12 @@ function renderPage(content: string, _meta: PageMeta): string {
           rel: "stylesheet",
           href: "https://cdn.jsdelivr.net/npm/holiday.css@0.9.8",
         }),
+        h("link", {
+          rel: "stylesheet",
+          href: prismJs("themes/prism-tomorrow.css"),
+          integrity: "sha256-0dkohC9ZEupqWbq0hS5cVR4QQXJ+mp6N2oJyuks6gt0=",
+          crossorigin: "anonymous",
+        }),
       ),
       h(
         "body",
@@ -136,6 +163,18 @@ function renderPage(content: string, _meta: PageMeta): string {
             "diplodocus",
           ),
         ),
+        h("script", {
+          src: prismJs("components/prism-core.min.js"),
+          integrity: "sha256-dz05jjFU9qYuMvQQlE6iWDtNAnEsmu6uMb1vWhKdkEM=",
+          crossorigin: "anonymous",
+          defer: "defer",
+        }),
+        h("script", {
+          src: prismJs("plugins/autoloader/prism-autoloader.min.js"),
+          integrity: "sha256-sttoa+EIAvFFfeeIkmPn8ypyOOb6no2sZ2NbxtBXgqU=",
+          crossorigin: "anonymous",
+          defer: "defer",
+        }),
       ),
     );
 }
