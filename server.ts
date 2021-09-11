@@ -118,6 +118,21 @@ function prismJs(path: string) {
   return `https://cdn.jsdelivr.net/npm/prismjs@1.24.1/${path}`;
 }
 function renderPage(content: string, _meta: PageMeta): string {
+  const regex = /<h([123456]) [^>]*id="([^"]+)"[^>]*>([^<]*)<\/h[123456]>/g;
+  let minLevel = 6;
+  const tocMd = (content.match(regex) || []).map((matched) => {
+    const [levelStr, id] = (matched.replace(regex, "$1 $2") || "").split(" ");
+    const level = Number(levelStr);
+    if (level < minLevel) {
+      minLevel = level;
+    }
+    const text = matched.replace(/<[^>]*>/g, "");
+    return `${"  ".repeat(level)}- [${text}](#${id})`;
+  }).map((str) => str.slice(minLevel * 2)).join("\n");
+
+  const toc = Marked.parse(tocMd).content;
+  console.log({ tocMd, toc });
+
   return "<!DOCTYPE html>" +
     h(
       "html",
@@ -153,6 +168,14 @@ function renderPage(content: string, _meta: PageMeta): string {
           h("div", "this is description"),
         ),
         h("nav", { id: "header-nav" }, genNavbar(navLinks)),
+        toc
+          ? h(
+            "details",
+            { id: "table-of-contents" },
+            h("summary", "Table of contents"),
+            toc,
+          )
+          : "",
         h("main", content),
         h(
           "footer",
