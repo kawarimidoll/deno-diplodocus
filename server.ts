@@ -2,8 +2,7 @@
 
 import { Diplodocus } from "./mod.ts";
 
-const diplodocus = new Diplodocus();
-await diplodocus.load("./diplodocus.json");
+const diplodocus = await Diplodocus.load("./diplodocus.json");
 
 const listener = Deno.listen({ port: 8080 });
 if (!Deno.env.get("DENO_DEPLOYMENT_ID")) {

@@ -1,4 +1,8 @@
 {
+  "sourceDir": "docs",
+  "siteName": "Diplodocus",
+  "description": "Static Asset Server for Deno Deploy",
+
   "navLinks": [
     { "title": "Examples", "path": "/examples" },
     { "title": "Lorem", "path": "/lorem" },

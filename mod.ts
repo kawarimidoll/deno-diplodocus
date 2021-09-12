@@ -12,47 +12,15 @@ class MyRenderer extends Renderer {
     const id = String(text).trim().toLocaleLowerCase().replace(/\s+/g, "-");
     return `<h${level} id="${id}">${text}</h${level}>`;
   }
-  // link(href: string, title: string, text: string): string {
-  //   if (this.options.sanitize) {
-  //     let prot: string;
-  //
-  //     try {
-  //       prot = decodeURIComponent(this.options.unescape!(href))
-  //         .replace(/[^\w:]/g, "")
-  //         .toLowerCase();
-  //     } catch (_) {
-  //       return text;
-  //     }
-  //
-  //     if (
-  //       prot.indexOf("javascript:") === 0 || prot.indexOf("vbscript:") === 0 ||
-  //       prot.indexOf("data:") === 0
-  //     ) {
-  //       return text;
-  //     }
-  //   }
-  //
-  //   let out = '<a href="' + href + '"';
-  //
-  //   if (title) {
-  //     out += ' title="' + title + '"';
-  //   }
-  //
-  //   if (href.startsWith("http")) {
-  //     out += ' target="_blank"';
-  //   }
-  //
-  //   out += ">" + text + "</a>";
-  //
-  //   return out;
-  // }
 }
 
 Marked.setOptions({ renderer: new MyRenderer() });
 
 export const defaultConfig = {
   sourceDir: "docs",
-  siteName: "Diplodocus",
+  lang: "en",
+  siteName: "",
+  description: "",
   navLinks: [] as Array<NavLink>,
   listPages: [] as Array<ListPage>,
 };
@@ -80,14 +48,10 @@ export type PageMeta = {
   tag?: Array<string>;
   toc?: boolean;
 };
-export type Neighbors = {
-  prev?: PageLink;
-  next?: PageLink;
-};
 
 export class Diplodocus {
   storedPages: Record<string, string> = {};
-  pageNeighbors: Record<string, Neighbors> = {};
+  storedMeta: Record<string, PageMeta> = {};
   config: Config;
 
   constructor(userConfig: UserConfig = {}) {
@@ -95,44 +59,48 @@ export class Diplodocus {
     this.processStoredData();
   }
 
-  async load(path: string) {
+  static async load(path: string) {
     let userConfig: UserConfig = {};
     try {
       userConfig = JSON.parse(await Deno.readTextFile(path)) as UserConfig;
     } catch (error) {
-      console.warn("getConfig failed");
-      console.warn(error);
+      console.error("Diplodocus load failed");
+      throw error;
     }
-    this.config = { ...defaultConfig, ...userConfig };
-    this.processStoredData();
+    return new Diplodocus(userConfig);
   }
 
   processStoredData() {
     this.storedPages = {};
-    this.pageNeighbors = {};
+    this.storedMeta = {};
 
     const { listPages, sourceDir } = this.config;
     listPages.forEach(({ title, path, items }) => {
+      const filePath = `${sourceDir}${path}.md`;
+      this.storedMeta[filePath] ||= {};
+
       // generate list pages
-      this.storedPages[`${sourceDir}${path}.md`] = [
-        "---",
-        "toc: false",
-        "---",
+      this.storedPages[filePath] = [
+        // "---",
+        // "toc: false",
+        // "---",
         `# ${title}`,
         ...items.map(({ title, path }) => `- [${title}](${path})`),
       ].join("\n");
 
+      this.storedMeta[filePath].toc = false;
+
       // generate prev/next links
       items.forEach(({ path }, idx) => {
-        const filePath = `${sourceDir}${path}.md`;
+        const itemFilePath = `${sourceDir}${path}.md`;
 
-        this.pageNeighbors[filePath] = {};
+        this.storedMeta[itemFilePath] ||= {};
 
         if (items[idx - 1]) {
-          this.pageNeighbors[filePath].prev = items[idx - 1];
+          this.storedMeta[itemFilePath].prev = items[idx - 1];
         }
         if (items[idx + 1]) {
-          this.pageNeighbors[filePath].next = items[idx + 1];
+          this.storedMeta[itemFilePath].next = items[idx + 1];
         }
       });
     });
@@ -140,7 +108,7 @@ export class Diplodocus {
     console.log({
       listPages,
       storedPages: this.storedPages,
-      pageNeighbors: this.pageNeighbors,
+      storedMeta: this.storedMeta,
     });
   }
 
@@ -149,28 +117,34 @@ export class Diplodocus {
     const storedPage = this.storedPages[filePath];
     if (storedPage) {
       const { content, meta } = Marked.parse(storedPage);
-      console.log({ meta });
-      return renderPage(content, meta, this.config);
+      const storedMeta = this.storedMeta[filePath] || {};
+      const pageMeta = { ...storedMeta, ...meta };
+      console.log({ meta, pageMeta });
+      return renderPage(content, pageMeta, this.config);
     }
 
     try {
       const data = await Deno.readFile(filePath);
 
       if (filePath.endsWith(".md") && parseMd) {
-        let md = new TextDecoder().decode(data);
-        const neighbors = this.pageNeighbors[filePath];
-        if (neighbors?.prev) {
-          md += "\n" +
-            `- Prev: [${neighbors.prev.title}](${neighbors.prev.path})`;
-        }
-        if (neighbors?.next) {
-          md += "\n" +
-            `- Next: [${neighbors.next.title}](${neighbors.next.path})`;
-        }
+        const md = new TextDecoder().decode(data);
+        // let md = new TextDecoder().decode(data);
+        const storedMeta = this.storedMeta[filePath] || {};
+        // const { prev, next } = this.pageNeighbors[filePath] || {};
+        // if (prev) {
+        //   md += "\n" +
+        //     `- Prev: [${prev.title}](${prev.path})`;
+        // }
+        // if (next) {
+        //   md += "\n" +
+        //     `- Next: [${next.title}](${next.path})`;
+        // }
         const { content, meta } = Marked.parse(md);
-        console.log({ meta });
 
-        return renderPage(content, meta, this.config);
+        const pageMeta = { ...storedMeta, ...meta };
+        console.log({ meta, pageMeta });
+
+        return renderPage(content, pageMeta, this.config);
       }
 
       return data;
@@ -266,7 +240,7 @@ export function renderPage(
   siteMeta: Config,
 ): string {
   const { toc } = pageMeta;
-  const { siteName, navLinks } = siteMeta;
+  const { lang, siteName, description, navLinks } = siteMeta;
   const regex = /<h([123456]) [^>]*id="([^"]+)"[^>]*>([^<]*)<\/h[123456]>/g;
   let minLevel = 6;
 
@@ -288,6 +262,7 @@ export function renderPage(
   return "<!DOCTYPE html>" +
     h(
       "html",
+      { lang },
       h(
         "head",
         h("meta", { charset: "UTF-8" }),
@@ -296,6 +271,7 @@ export function renderPage(
           name: "viewport",
           content: "width=device-width,initial-scale=1.0,minimum-scale=1.0",
         }),
+        h("meta", { name: "description", content: description }),
         h("link", {
           rel: "icon",
           href: "https://twemoji.maxcdn.com/v/13.1.0/72x72/1f4e6.png",
