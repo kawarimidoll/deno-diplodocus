@@ -9,7 +9,11 @@ import {
 // https://github.com/ts-stack/markdown/blob/5b6145bf713b928b510770df8ee57d3d48d36b9c/projects/markdown/src/renderer.ts
 class MyRenderer extends Renderer {
   heading(text: string, level: number) {
-    const id = String(text).trim().toLocaleLowerCase().replace(/\s+/g, "-");
+    const id = String(text)
+      .replace(/^<[^>]*>/, "")
+      .replace(/<\/[^>]*>$/, "")
+      .replace(/\s+|<[^>]*>/g, "-")
+      .trim().toLocaleLowerCase();
     return `<h${level} id="${id}">${text}</h${level}>`;
   }
 }
@@ -242,7 +246,7 @@ export function renderPage(
 ): string {
   const { toc } = pageMeta;
   const { lang, siteName, description, navLinks, favicon } = siteMeta;
-  const regex = /<h([123456]) [^>]*id="([^"]+)"[^>]*>([^<]*)<\/h[123456]>/g;
+  const regex = /<h([123456]) [^>]*id="([^"]+)"[^>]*>(.*)<\/h[123456]>/g;
   let minLevel = 6;
 
   const tocMd = toc !== false
