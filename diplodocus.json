@@ -4,6 +4,7 @@
   "description": "Static Asset Server for Deno Deploy",
 
   "navLinks": [
+    { "title": "Docs", "path": "/docs" },
     { "title": "Examples", "path": "/examples" },
     { "title": "Lorem", "path": "/lorem" },
     {
@@ -17,6 +18,14 @@
   ],
 
   "listPages": [
+    {
+      "title": "Docs",
+      "path": "/docs",
+      "items": [
+        { "path": "/docs/usage", "title": "Usage" },
+        { "path": "/docs/config", "title": "Config" }
+      ]
+    },
     {
       "title": "Lorem",
       "path": "/lorem",
