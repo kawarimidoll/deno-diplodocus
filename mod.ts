@@ -19,8 +19,9 @@ Marked.setOptions({ renderer: new MyRenderer() });
 export const defaultConfig = {
   sourceDir: "docs",
   lang: "en",
-  siteName: "",
-  description: "",
+  siteName: "Built by Diplodocus",
+  description: "This site is built by Diplodocus",
+  favicon: "https://twemoji.maxcdn.com/v/13.1.0/72x72/1f4e6.png",
   navLinks: [] as Array<NavLink>,
   listPages: [] as Array<ListPage>,
 };
@@ -240,7 +241,7 @@ export function renderPage(
   siteMeta: Config,
 ): string {
   const { toc } = pageMeta;
-  const { lang, siteName, description, navLinks } = siteMeta;
+  const { lang, siteName, description, navLinks, favicon } = siteMeta;
   const regex = /<h([123456]) [^>]*id="([^"]+)"[^>]*>([^<]*)<\/h[123456]>/g;
   let minLevel = 6;
 
@@ -259,6 +260,9 @@ export function renderPage(
   const tocHtml = Marked.parse(tocMd).content;
   console.log({ tocMd, pageMeta, tocHtml });
 
+  const viewport = "width=device-width,initial-scale=1.0,minimum-scale=1.0";
+  const title = "" + siteName;
+
   return "<!DOCTYPE html>" +
     h(
       "html",
@@ -266,16 +270,18 @@ export function renderPage(
       h(
         "head",
         h("meta", { charset: "UTF-8" }),
-        h("title", siteName),
-        h("meta", {
-          name: "viewport",
-          content: "width=device-width,initial-scale=1.0,minimum-scale=1.0",
-        }),
+        h("title", title),
+        h("meta", { name: "viewport", content: viewport }),
         h("meta", { name: "description", content: description }),
-        h("link", {
-          rel: "icon",
-          href: "https://twemoji.maxcdn.com/v/13.1.0/72x72/1f4e6.png",
-        }),
+        h("link", { rel: "icon", href: favicon }),
+        h("meta", { property: "og:url", content: "https://pax.deno.dev/" }),
+        h("meta", { property: "og:type", content: "website" }),
+        h("meta", { property: "og:title", content: title }),
+        h("meta", { property: "og:description", content: description }),
+        h("meta", { property: "og:site_name", content: siteName }),
+        // h("meta", { property: "og:image", content: favicon }),
+        h("meta", { name: "twitter:card", content: "summary" }),
+        // h("meta", { name: "twitter:site", content: userName }),
         h("link", {
           rel: "stylesheet",
           href: "https://cdn.jsdelivr.net/npm/holiday.css@0.9.8",
@@ -314,13 +320,13 @@ export function renderPage(
           src: prismJs("components/prism-core.min.js"),
           integrity: "sha256-dz05jjFU9qYuMvQQlE6iWDtNAnEsmu6uMb1vWhKdkEM=",
           crossorigin: "anonymous",
-          defer: "defer",
+          defer: true,
         }),
         h("script", {
           src: prismJs("plugins/autoloader/prism-autoloader.min.js"),
           integrity: "sha256-sttoa+EIAvFFfeeIkmPn8ypyOOb6no2sZ2NbxtBXgqU=",
           crossorigin: "anonymous",
-          defer: "defer",
+          defer: true,
         }),
       ),
     );
