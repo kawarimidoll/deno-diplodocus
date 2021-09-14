@@ -11,4 +11,4 @@ export const httpStatusText = status.pretty;
 
 export { lookup as lookupMimeType } from "https://deno.land/x/mime_types@1.0.0/mod.ts";
 
-export { tag } from "https://deno.land/x/markup_tag@0.1.2/mod.ts";
+export { tag } from "https://deno.land/x/markup_tag@0.3.0/mod.ts";
