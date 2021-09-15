@@ -43,7 +43,7 @@ Create `server.ts` like this.
 
 ```ts
 // server.ts
-import { Diplodocus } from "https://pax.deno.dev/kawarimidoll/diplodocus";
+import { Diplodocus } from "https://pax.deno.dev/kawarimidoll/deno-diplodocus";
 
 const diplodocus = new Diplodocus();
 
@@ -66,6 +66,6 @@ for await (const conn of listener) {
 Run `server.ts` and access to the local server.
 
 ```sh
-$ deno run --allow-net --allow-read ./server.ts
-HTTP server listening on http://0.0.0.0:8080
+$ deplyctl run ./server.ts
+$ # deno run --allow-net --allow-read --no-check ./server.ts
 ```
