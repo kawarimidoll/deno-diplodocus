@@ -4,10 +4,10 @@ import { Diplodocus } from "./mod.ts";
 
 const diplodocus = await Diplodocus.load("./diplodocus.json");
 
-const listener = Deno.listen({ port: 8080 });
+const port = 8080;
+const listener = Deno.listen({ port });
 if (!Deno.env.get("DENO_DEPLOYMENT_ID")) {
-  const { hostname, port } = listener.addr;
-  console.log(`HTTP server listening on http://${hostname}:${port}`);
+  console.log(`HTTP server listening on http://localhost:${port}`);
 }
 
 async function handleConn(conn: Deno.Conn) {
