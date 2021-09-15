@@ -139,7 +139,6 @@ declare namespace Deno {
    * Finally, you can also specify the depth to which it will format.
    *
    *      Deno.inspect({a: {b: {c: {d: 'hello'}}}}, {depth: 2}); // { a: { b: [Object] } }
-   *
    */
   export function inspect(value: unknown, options?: InspectOptions): string;
 
@@ -202,7 +201,7 @@ declare namespace Deno {
     /** The resource ID of the connection. */
     readonly rid: number;
     /** Shuts down (`shutdown(2)`) the write side of the connection. Most
-   * callers should just use `close()`. */
+     * callers should just use `close()`. */
     closeWrite(): Promise<void>;
   }
 
@@ -226,7 +225,7 @@ declare namespace Deno {
     /** The port to listen on. */
     port: number;
     /** A literal IP address or host name that can be resolved to an IP address.
-    * If not specified, defaults to `0.0.0.0`. */
+     * If not specified, defaults to `0.0.0.0`. */
     hostname?: string;
   }
 
@@ -771,7 +770,6 @@ declare class URLSearchParams {
    *   console.log(value, key, parent);
    * });
    * ```
-   *
    */
   forEach(
     callbackfn: (value: string, key: string, parent: this) => void,
@@ -1789,7 +1787,7 @@ declare namespace WebAssembly {
     /**
      * Given a `Module` and string, returns a copy of the contents of all custom sections in the
      * module with the given string name.
-     * */
+     */
     static customSections(
       moduleObject: Module,
       sectionName: string,
