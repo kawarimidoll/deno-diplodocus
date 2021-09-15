@@ -10,9 +10,9 @@ import { Diplodocus } from "https://pax.deno.dev/kawarimidoll/deno-diplodocus";
 
 const diplodocus = new Diplodocus();
 
-const listener = Deno.listen({ port: 8080 });
-const { hostname, port } = listener.addr;
-console.log(`HTTP server listening on http://${hostname}:${port}`);
+const port = 8080;
+const listener = Deno.listen({ port });
+console.log(`HTTP server listening on http://localhost:${port}`);
 
 async function handleConn(conn: Deno.Conn) {
   const httpConn = Deno.serveHttp(conn);

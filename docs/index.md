@@ -16,7 +16,7 @@ Diplodocus is Static Assets Serving System for
 
 ## Quick start
 
-Create `docs` directly.
+Create `docs` directly and some markdown pages.
 
 ```sh
 ├── docs/
@@ -47,9 +47,9 @@ import { Diplodocus } from "https://pax.deno.dev/kawarimidoll/deno-diplodocus";
 
 const diplodocus = new Diplodocus();
 
-const listener = Deno.listen({ port: 8080 });
-const { hostname, port } = listener.addr;
-console.log(`HTTP server listening on http://${hostname}:${port}`);
+const port = 8080;
+const listener = Deno.listen({ port });
+console.log(`HTTP server listening on http://localhost:${port}`);
 
 async function handleConn(conn: Deno.Conn) {
   const httpConn = Deno.serveHttp(conn);
@@ -63,9 +63,10 @@ for await (const conn of listener) {
 }
 ```
 
-Run `server.ts` and access to the local server.
+Run `server.ts` and access to the local server. You can use `deno run` or
+[deployctl](https://github.com/denoland/deployctl).
 
 ```sh
-$ deplyctl run ./server.ts
-$ # deno run --allow-net --allow-read --no-check ./server.ts
+$ deno run --allow-net --allow-read ./server.ts
+$ # deplyctl run ./server.ts
 ```

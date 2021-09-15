@@ -7,14 +7,17 @@
     { "title": "Docs", "path": "/docs" },
     { "title": "Examples", "path": "/examples" },
     { "title": "Lorem", "path": "/lorem" },
+    { "title": "Acknowledgements", "path": "/acknowledgements" },
     {
       "title": "Links",
       "items": [
-        { "path": "https://github.com", "title": "GitHub" },
-        { "path": "https://twitter.com", "title": "Twitter" }
+        {
+          "path": "https://github.com/kawarimidoll/deno-diplodocus",
+          "title": "GitHub"
+        },
+        { "path": "https://twitter.com/kawarimidoll", "title": "Twitter" }
       ]
-    },
-    { "title": "Acknowledgements", "path": "/acknowledgements" }
+    }
   ],
 
   "listPages": [
