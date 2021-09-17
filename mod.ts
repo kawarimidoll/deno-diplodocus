@@ -65,14 +65,13 @@ export class Diplodocus {
   }
 
   static async load(path: string) {
-    let userConfig: UserConfig = {};
     try {
-      userConfig = JSON.parse(await Deno.readTextFile(path)) as UserConfig;
+      const userConfig = JSON.parse(await Deno.readTextFile(path));
+      return new Diplodocus(userConfig);
     } catch (error) {
       console.error("Diplodocus load failed");
       throw error;
     }
-    return new Diplodocus(userConfig);
   }
 
   processStoredData() {
