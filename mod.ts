@@ -25,7 +25,9 @@ export const defaultConfig = {
   lang: "en",
   siteName: "Built by Diplodocus",
   description: "This site is built by Diplodocus",
-  favicon: "https://twemoji.maxcdn.com/v/13.1.0/72x72/1f4e6.png",
+  favicon: "https://twemoji.maxcdn.com/v/13.1.0/72x72/1f995.png",
+  siteImage: "https://twemoji.maxcdn.com/v/13.1.0/72x72/1f995.png",
+  twitter: "",
   navLinks: [] as Array<NavLink>,
   listPages: [] as Array<ListPage>,
 };
@@ -85,9 +87,6 @@ export class Diplodocus {
 
       // generate list pages
       this.storedPages[filePath] = [
-        // "---",
-        // "toc: false",
-        // "---",
         `# ${title}`,
         ...items.map(({ title, path }) => `- [${title}](${path})`),
       ].join("\n");
@@ -116,7 +115,11 @@ export class Diplodocus {
     });
   }
 
-  async readData(filePath: string, parseMd = false): Promise<BodyInit> {
+  async readData(
+    filePath: string,
+    pageUrl: string,
+    parseMd = false,
+  ): Promise<BodyInit> {
     console.log({ filePath, parseMd });
     const storedPage = this.storedPages[filePath];
     if (storedPage) {
@@ -124,7 +127,7 @@ export class Diplodocus {
       const storedMeta = this.storedMeta[filePath] || {};
       const pageMeta = { ...storedMeta, ...meta };
       console.log({ meta, pageMeta });
-      return renderPage(content, pageMeta, this.config);
+      return renderPage({ content, pageMeta, siteMeta: this.config, pageUrl });
     }
 
     try {
@@ -132,23 +135,18 @@ export class Diplodocus {
 
       if (filePath.endsWith(".md") && parseMd) {
         const md = new TextDecoder().decode(data);
-        // let md = new TextDecoder().decode(data);
         const storedMeta = this.storedMeta[filePath] || {};
-        // const { prev, next } = this.pageNeighbors[filePath] || {};
-        // if (prev) {
-        //   md += "\n" +
-        //     `- Prev: [${prev.title}](${prev.path})`;
-        // }
-        // if (next) {
-        //   md += "\n" +
-        //     `- Next: [${next.title}](${next.path})`;
-        // }
         const { content, meta } = Marked.parse(md);
 
         const pageMeta = { ...storedMeta, ...meta };
         console.log({ meta, pageMeta });
 
-        return renderPage(content, pageMeta, this.config);
+        return renderPage({
+          content,
+          pageMeta,
+          siteMeta: this.config,
+          pageUrl,
+        });
       }
 
       return data;
@@ -156,7 +154,7 @@ export class Diplodocus {
       const subject = `${error}`.split(":")[0];
 
       if (subject === "NotFound" && filePath.endsWith(".html")) {
-        return this.readData(filePath.replace("html", "md"), true);
+        return this.readData(filePath.replace("html", "md"), pageUrl, true);
       }
 
       // in other cases, throw error transparency
@@ -199,7 +197,7 @@ export class Diplodocus {
     }
 
     try {
-      const data = await this.readData(filePath);
+      const data = await this.readData(filePath, href);
 
       return new Response(data, {
         headers: { "content-type": mimeType },
@@ -239,12 +237,28 @@ function prismJs(path: string) {
   return `https://cdn.jsdelivr.net/npm/prismjs@1.24.1/${path}`;
 }
 export function renderPage(
-  content: string,
-  pageMeta: PageMeta,
-  siteMeta: Config,
+  {
+    content,
+    pageMeta,
+    siteMeta,
+    pageUrl,
+  }: {
+    content: string;
+    pageMeta: PageMeta;
+    siteMeta: Config;
+    pageUrl: string;
+  },
 ): string {
   const { toc, prev, next } = pageMeta;
-  const { lang, siteName, description, navLinks, favicon } = siteMeta;
+  const {
+    lang,
+    siteName,
+    description,
+    navLinks,
+    favicon,
+    siteImage,
+    twitter,
+  } = siteMeta;
   const regex = /<h([123456]) [^>]*id="([^"]+)"[^>]*>(.*)<\/h[123456]>/g;
   let minLevel = 6;
 
@@ -280,14 +294,14 @@ export function renderPage(
         h("meta", { name: "viewport", content: viewport }),
         h("meta", { name: "description", content: description }),
         h("link", { rel: "icon", href: favicon }),
-        h("meta", { property: "og:url", content: "https://pax.deno.dev/" }),
+        h("meta", { property: "og:url", content: pageUrl }),
         h("meta", { property: "og:type", content: "website" }),
         h("meta", { property: "og:title", content: title }),
         h("meta", { property: "og:description", content: description }),
         h("meta", { property: "og:site_name", content: siteName }),
-        // h("meta", { property: "og:image", content: favicon }),
+        h("meta", { property: "og:image", content: siteImage }),
         h("meta", { name: "twitter:card", content: "summary" }),
-        // h("meta", { name: "twitter:site", content: userName }),
+        h("meta", { name: "twitter:site", content: twitter }),
         h("link", {
           rel: "stylesheet",
           href: "https://cdn.jsdelivr.net/npm/holiday.css@0.9.8",
