@@ -15,7 +15,7 @@
           "path": "https://github.com/kawarimidoll/deno-diplodocus",
           "title": "GitHub"
         },
-        { "path": "https://twitter.com/kawarimidoll", "title": "Twitter" }
+        { "path": "https://deno.land/x/diplodocus", "title": "deno.land/x" }
       ]
     }
   ],

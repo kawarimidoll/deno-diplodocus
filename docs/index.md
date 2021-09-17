@@ -12,8 +12,6 @@ Diplodocus is Static Assets Serving System for
 - Serve the assets on the GitHub repository
 - Parse the Markdown files to HTML pages
 
-[View source on GitHub](https://github.com/kawarimidoll/deno-diplodocus)
-
 ## Quick start
 
 Create `docs` directly and some markdown pages.
@@ -43,7 +41,7 @@ Create `server.ts` like this.
 
 ```ts
 // server.ts
-import { Diplodocus } from "https://pax.deno.dev/kawarimidoll/deno-diplodocus";
+import { Diplodocus } from "https://deno.land/x/diplodocus/mod.ts";
 
 const diplodocus = new Diplodocus();
 

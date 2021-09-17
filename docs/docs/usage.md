@@ -6,7 +6,7 @@
 
 ```ts
 // server.ts
-import { Diplodocus } from "https://pax.deno.dev/kawarimidoll/deno-diplodocus";
+import { Diplodocus } from "https://deno.land/x/diplodocus/mod.ts";
 
 const diplodocus = new Diplodocus();
 
