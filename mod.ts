@@ -244,7 +244,7 @@ export function renderPage(
   pageMeta: PageMeta,
   siteMeta: Config,
 ): string {
-  const { toc } = pageMeta;
+  const { toc, prev, next } = pageMeta;
   const { lang, siteName, description, navLinks, favicon } = siteMeta;
   const regex = /<h([123456]) [^>]*id="([^"]+)"[^>]*>(.*)<\/h[123456]>/g;
   let minLevel = 6;
@@ -266,6 +266,9 @@ export function renderPage(
 
   const viewport = "width=device-width,initial-scale=1.0,minimum-scale=1.0";
   const title = "" + siteName;
+  const style = "#table-of-contents{margin:2rem;margin-bottom:0;}" +
+    "#neighbors{display:flex;margin-bottom:1rem}#prev,#next{display:block;width:50%}" +
+    "#next{margin-left:auto}#prev::before{content:'« '}#next::after{content:' »'}";
 
   return "<!DOCTYPE html>" +
     h(
@@ -296,7 +299,7 @@ export function renderPage(
           integrity: "sha256-0dkohC9ZEupqWbq0hS5cVR4QQXJ+mp6N2oJyuks6gt0=",
           crossorigin: "anonymous",
         }),
-        h("style", "#table-of-contents{margin:2rem;margin-bottom:0;}"),
+        h("style", style),
       ),
       h(
         "body",
@@ -313,11 +316,20 @@ export function renderPage(
         h("main", content),
         h(
           "footer",
-          "Powered by ",
           h(
-            "a",
-            { href: "https://github.com/kawarimidoll/deno-diplodocus" },
-            "diplodocus",
+            "div",
+            { id: "neighbors" },
+            prev ? h("a", { id: "prev", href: prev.path }, prev.title) : "",
+            next ? h("a", { id: "next", href: next.path }, next.title) : "",
+          ),
+          h(
+            "div",
+            "Powered by ",
+            h(
+              "a",
+              { href: "https://github.com/kawarimidoll/deno-diplodocus" },
+              "diplodocus",
+            ),
           ),
         ),
         h("script", {
