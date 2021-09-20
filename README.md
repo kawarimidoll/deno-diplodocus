@@ -11,18 +11,11 @@ Now developing with fun!
 
 [![deploy](https://deno.com/deno-deploy-button.svg)](https://diplodocus.deno.dev/)
 
-## Acknowledgements
+## Motivation
 
-- Core
-  - [Deno](https://deno.land)
-  - [Deno Deploy](https://deno.com/deploy)
-- Dependencies
-  - [markdown](https://deno.land/x/markdown)
-  - [status](https://deno.land/x/status)
-  - [mime_types](https://deno.land/x/mime_types)
-  - [markup_tag](https://deno.land/x/markup_tag)
-- Updating Dependencies
-  - [udd](https://deno.land/x/udd)
-- Styling
-  - [holiday.css](https://holidaycss.js.org/)
-  - [Prism](https://prismjs.com/)
+Most of Deno products still use the platforms such as GitHub Pages, Vercel or
+Netlify for its documentation. But now Deno Deploy has serving static assets
+feature, and I think Deno Deploy is the most suitable select for Deno Products!
+
+Diplodocus is the simple static serving system only for Deno Deploy with
+no-build. It is useful to create the documents or blog sites.
