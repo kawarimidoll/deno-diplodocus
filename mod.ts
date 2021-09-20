@@ -30,7 +30,7 @@ export const defaultConfig = {
   siteImage: "https://twemoji.maxcdn.com/v/13.1.0/72x72/1f995.png",
   twitter: "",
   navLinks: [] as Array<NavLink>,
-  listPages: [] as Array<ListPage>,
+  listPages: [] as Array<PageLink>,
 };
 export type Config = typeof defaultConfig;
 export type UserConfig = Partial<Config>;
@@ -95,17 +95,18 @@ export class Diplodocus {
         continue;
       }
       const { name } = page;
+      const basename = name.replace(/\.md$/, "");
 
       const md = await Deno.readTextFile(`${listDir}/${name}`);
       const { content, meta } = Marked.parse(md);
       const title = meta.title ||
         (content.match(/<h1[^>]*>(.*)<\/h1>/) || [])[1] ||
-        name.replace(/\.md$/, "");
+        basename;
 
-      pages.push({ title, path: `${listPath}/${name}` });
+      pages.push({ title, path: `${listPath}/${basename}` });
     }
 
-    return sortBy(pages, (page) => page.title);
+    return sortBy(pages, (page) => page.path);
   }
 
   async processStoredData() {
@@ -113,7 +114,7 @@ export class Diplodocus {
     this.storedMeta = {};
 
     const { listPages, sourceDir } = this.config;
-    for (const { title, path, items } of listPages) {
+    for (const { title, path } of listPages) {
       const filePath = `${sourceDir}${path}.md`;
       this.storedMeta[filePath] ||= {};
 
@@ -123,22 +124,22 @@ export class Diplodocus {
       // generate list pages
       this.storedPages[filePath] = [
         `# ${title}`,
-        ...items.map(({ title, path }) => `- [${title}](${path})`),
+        ...pages.map(({ title, path }) => `- [${title}](${path})`),
       ].join("\n");
 
       this.storedMeta[filePath].toc = false;
 
       // generate prev/next links
-      items.forEach(({ path }, idx) => {
+      pages.forEach(({ path }, idx) => {
         const itemFilePath = `${sourceDir}${path}.md`;
 
         this.storedMeta[itemFilePath] ||= {};
 
-        if (items[idx - 1]) {
-          this.storedMeta[itemFilePath].prev = items[idx - 1];
+        if (pages[idx - 1]) {
+          this.storedMeta[itemFilePath].prev = pages[idx - 1];
         }
-        if (items[idx + 1]) {
-          this.storedMeta[itemFilePath].next = items[idx + 1];
+        if (pages[idx + 1]) {
+          this.storedMeta[itemFilePath].next = pages[idx + 1];
         }
       });
     }

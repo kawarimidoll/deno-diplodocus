@@ -21,25 +21,7 @@
   ],
 
   "listPages": [
-    {
-      "title": "Docs",
-      "path": "/docs",
-      "items": [
-        { "path": "/docs/usage", "title": "Usage" },
-        { "path": "/docs/config", "title": "Config" }
-      ]
-    },
-    {
-      "title": "Lorem",
-      "path": "/lorem",
-      "items": [
-        { "path": "/lorem/01", "title": "Lorem 01" },
-        { "path": "/lorem/02", "title": "Lorem 02" },
-        { "path": "/lorem/03", "title": "Lorem 03" },
-        { "path": "/lorem/04", "title": "Lorem 04" },
-        { "path": "/lorem/05", "title": "Lorem 05" },
-        { "path": "/lorem/06", "title": "Lorem 06" }
-      ]
-    }
+    { "title": "Docs", "path": "/docs" },
+    { "title": "Lorem", "path": "/lorem" }
   ]
 }
