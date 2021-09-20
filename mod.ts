@@ -282,6 +282,8 @@ export function renderPage(
   const style = "#table-of-contents{margin:2rem;margin-bottom:0;}" +
     "#neighbors{display:flex;margin-bottom:1rem}#prev,#next{display:block;width:50%}" +
     "#next{margin-left:auto}#prev::before{content:'« '}#next::after{content:' »'}";
+  const isRoot = /^https?:\/\/[^\/]+\/?$/.test(pageUrl);
+  const pageType = isRoot ? "website" : "article";
 
   return "<!DOCTYPE html>" +
     h(
@@ -295,7 +297,7 @@ export function renderPage(
         h("meta", { name: "description", content: description }),
         h("link", { rel: "icon", href: favicon }),
         h("meta", { property: "og:url", content: pageUrl }),
-        h("meta", { property: "og:type", content: "website" }),
+        h("meta", { property: "og:type", content: pageType }),
         h("meta", { property: "og:title", content: title }),
         h("meta", { property: "og:description", content: description }),
         h("meta", { property: "og:site_name", content: siteName }),
