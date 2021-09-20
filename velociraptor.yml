@@ -7,6 +7,7 @@ scripts:
     desc: Starts local server
     cmd: server.ts
     watch: true
+    noCheck: true
     allow:
       - read
       - net

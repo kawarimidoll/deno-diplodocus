@@ -1,3 +1,4 @@
+import { sortBy } from "https://deno.land/std@0.107.0/collections/mod.ts";
 import {
   httpStatusText,
   lookupMimeType,
@@ -61,29 +62,63 @@ export class Diplodocus {
   storedMeta: Record<string, PageMeta> = {};
   config: Config;
 
+  // DO NOT CALL CONSTRUCTOR DIRECTLY!!!
   constructor(userConfig: UserConfig = {}) {
     this.config = { ...defaultConfig, ...userConfig };
-    this.processStoredData();
+  }
+
+  static async create(userConfig: UserConfig = {}) {
+    const instance = new Diplodocus(userConfig);
+    await instance.processStoredData();
+    return instance;
   }
 
   static async load(path: string) {
     try {
       const userConfig = JSON.parse(await Deno.readTextFile(path));
-      return new Diplodocus(userConfig);
+      return await this.create(userConfig);
     } catch (error) {
       console.error("Diplodocus load failed");
       throw error;
     }
   }
 
-  processStoredData() {
+  async collectList(listPath: string) {
+    if (!/^\/.*/.test(listPath)) {
+      throw new Error("path in list must be started with /");
+    }
+    const listDir = `${this.config.sourceDir}${listPath}`;
+    // console.log({ listDir });
+    const pages: Array<PageLink> = [];
+    for await (const page of Deno.readDir(listDir)) {
+      if (!page.isFile || !/\.md$/.test(page.name)) {
+        continue;
+      }
+      const { name } = page;
+
+      const md = await Deno.readTextFile(`${listDir}/${name}`);
+      const { content, meta } = Marked.parse(md);
+      const title = meta.title ||
+        (content.match(/<h1[^>]*>(.*)<\/h1>/) || [])[1] ||
+        name.replace(/\.md$/, "");
+
+      pages.push({ title, path: `${listPath}/${name}` });
+    }
+
+    return sortBy(pages, (page) => page.title);
+  }
+
+  async processStoredData() {
     this.storedPages = {};
     this.storedMeta = {};
 
     const { listPages, sourceDir } = this.config;
-    listPages.forEach(({ title, path, items }) => {
+    for (const { title, path, items } of listPages) {
       const filePath = `${sourceDir}${path}.md`;
       this.storedMeta[filePath] ||= {};
+
+      const pages = await this.collectList(path);
+      console.log({ pages });
 
       // generate list pages
       this.storedPages[filePath] = [
@@ -106,7 +141,7 @@ export class Diplodocus {
           this.storedMeta[itemFilePath].next = items[idx + 1];
         }
       });
-    });
+    }
 
     console.log({
       listPages,
