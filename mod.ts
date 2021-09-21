@@ -102,7 +102,7 @@ export type PageMeta = {
   next?: PageLink;
   date?: string;
   tag?: Array<string>;
-  toc?: boolean;
+  tocLevels?: Array<number>;
 };
 
 export class Diplodocus {
@@ -149,7 +149,7 @@ export class Diplodocus {
 
   async collectList(listPath: string) {
     if (!/^\/.*/.test(listPath)) {
-      throw new Error("path in list must be started with /");
+      listPath = "/" + listPath;
     }
     const listDir = `${this.config.sourceDir}${listPath}`;
     // console.log({ listDir });
@@ -191,7 +191,7 @@ export class Diplodocus {
         ...pages.map(({ title, path }) => `- [${title}](${path})`),
       ].join("\n");
 
-      this.storedMeta[filePath].toc = false;
+      this.storedMeta[filePath].tocLevels = [];
 
       // generate prev/next links
       pages.forEach(({ path }, idx) => {
@@ -349,7 +349,7 @@ export function renderPage(
     pageUrl: string;
   },
 ): string {
-  const { toc, prev, next } = pageMeta;
+  const { tocLevels, prev, next } = pageMeta;
   const {
     lang,
     siteName,
@@ -359,11 +359,18 @@ export function renderPage(
     siteImage,
     twitter,
   } = siteMeta;
-  const regex = /<h([123456]) [^>]*id="([^"]+)"[^>]*>(.*)<\/h[123456]>/g;
-  let minLevel = 6;
 
-  const tocMd = toc !== false
-    ? (content.match(regex) || []).map((matched) => {
+  let tocMd = "";
+  const levels = (tocLevels || [2, 3]).join("").replace(/[^1-6]/g, "");
+
+  if (levels) {
+    const regex = new RegExp(
+      `<h([${levels}]) [^>]*id="([^"]+)"[^>]*>(.*?)<\/h[${levels}]>`,
+      "g",
+    );
+    let minLevel = 6;
+
+    tocMd = (content.match(regex) || []).map((matched) => {
       const [levelStr, id] = (matched.replace(regex, "$1 $2") || "").split(" ");
       const level = Number(levelStr);
       if (level < minLevel) {
@@ -371,9 +378,8 @@ export function renderPage(
       }
       const text = matched.replace(/<[^>]*>/g, "");
       return `${"  ".repeat(level)}- [${text}](#${id})`;
-    }).map((str) => str.slice(minLevel * 2)).join("\n")
-    : "";
-
+    }).map((str) => str.slice(minLevel * 2)).join("\n");
+  }
   const tocHtml = Marked.parse(tocMd).content;
   console.log({ tocMd, pageMeta, tocHtml });
 
