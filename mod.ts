@@ -386,11 +386,13 @@ export function renderPage(
   const viewport = "width=device-width,initial-scale=1.0,minimum-scale=1.0";
   const title = "" + siteName;
   const style = "#table-of-contents{margin:2rem;margin-bottom:0;}" +
-    "#neighbors{display:flex;margin-bottom:1rem}#prev,#next{display:block;width:50%}" +
+    "#neighbors{display:flex;margin-bottom:1rem}" +
+    "#neighbors>#prev,#neighbors>#next{display:block;width:50%}" +
+    "#neighbors>#next{margin-left:auto}" +
+    "#neighbors>#prev::before{content:'« '}#neighbors>#next::after{content:' »'}" +
     ".feather{width:.8rem;height:.8rem;stroke:var(--text-color);stroke-width:2;" +
     "stroke-linecap:round;stroke-linejoin:round;fill:none;" +
-    "display:inline-block;margin:0 .05rem 0 .15rem;vertical-align:-.1em;}" +
-    "#next{margin-left:auto}#prev::before{content:'« '}#next::after{content:' »'}";
+    "display:inline-block;margin:0 .05rem 0 .15rem;vertical-align:-.1em;}";
   const isRoot = /^https?:\/\/[^\/]+\/?$/.test(pageUrl);
   const pageType = isRoot ? "website" : "article";
 
