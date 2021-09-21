@@ -1,4 +1,4 @@
-{
+export default {
   "sourceDir": "docs",
   "siteName": "Diplodocus",
   "description": "Static Asset Server for Deno Deploy",
@@ -13,15 +13,15 @@
       "items": [
         {
           "path": "https://github.com/kawarimidoll/deno-diplodocus",
-          "title": "GitHub"
+          "title": "GitHub",
         },
-        { "path": "https://deno.land/x/diplodocus", "title": "deno.land/x" }
-      ]
-    }
+        { "path": "https://deno.land/x/diplodocus", "title": "deno.land/x" },
+      ],
+    },
   ],
 
   "listPages": [
     { "title": "Docs", "path": "/docs" },
-    { "title": "Lorem", "path": "/lorem" }
-  ]
-}
+    { "title": "Lorem", "path": "/lorem" },
+  ],
+};
