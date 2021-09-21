@@ -1,39 +1,176 @@
-# Config
+# Site Configuration
 
-You can use these values to configure Diplodocus as arguments of constructor or
-keys of configuration file.
+Diplodocus works without any settings, but there are some configurable options.
 
-## `sourceDir`
+Diplodocus accepts YAML, JSON or TypeScript configuration files. The file should
+be `diplodocus.(yaml|yml|json|ts)` in the same directory with the entry point
+file of Deno Deploy such as `server.ts`.
+
+```sh
+├── docs/
+├── diplodocus.yml
+└── server.ts
+```
+
+If there are multiple configuration files, Diplodocus will choose one of them by
+this priority: (high) `yaml` `yml` `json` `ts` (low).
+
+## Format
+
+### diplodocus.yaml / diplodocus.yml
+
+```yml
+sourceDir: docs
+```
+
+### diplodocus.json
+
+```js
+{
+  "sourceDir": "docs"
+}
+```
+
+### diplodocus.ts
+
+```ts
+export default {
+  sourceDir: "docs",
+};
+```
+
+## Available Keys
+
+These values below can be used to configure Diplodocus. All of them are
+optional. If you use function-type key, the configuration file should be a
+TypeScript file.
+
+### sourceDir
 
 - Type: `string`
 - Default: `docs`
 
-## `lang`
+Directory that served by Diplodocus. This should be relative path from the file
+calling `Diplodocus.load()`.
+
+### lang
 
 - Type: `string`
 - Default: `en`
 
-## `siteName`
+Language of HTML files.
+
+### siteName
 
 - Type: `string`
 - Default: `Built by Diplodocus`
 
-## `description`
+Site name. This is put on the top of the pages and `<title>` tag of the HTML
+files.
+
+### description
 
 - Type: `string`
 - Default: `This site is built by Diplodocus`
 
-## `favicon`
+Site description. This is used in meta information of the HTML files.
 
-- Type: `https://twemoji.maxcdn.com/v/13.1.0/72x72/1f4e6.png`
-- Default: ``
+### favicon
 
-## `navLinks`
+- Type: `string`
+- Default: `https://twemoji.maxcdn.com/v/13.1.0/72x72/1f4e6.png`
+
+Site favicon.
+
+### image
+
+- Type: `string`
+- Default: same with `favicon`
+
+Site image. This will be shown in social links.
+
+### twitter
+
+- Type: `string`
+- Default: blank
+
+Twitter user name. This is put in `og:twitter` tag.
+
+### navLinks
 
 - Type: `Array<NavLink>`
 - Default: `[]`
 
-## `listPages`
+Array of the links on the navbar. Each item can have `title`, `path` and
+`items`.
 
-- Type: `Array<ListPage>`
+Example:
+
+```json
+{
+  "navLinks": [
+    { "title": "Documentation", "path": "docs" },
+    { "path": "acknowledgements" },
+    {
+      "title": "Links",
+      "items": [
+        {
+          "path": "https://github.com/kawarimidoll/deno-diplodocus",
+          "title": "GitHub"
+        },
+        { "path": "https://deno.land/x/diplodocus", "title": "deno.land/x" }
+      ]
+    }
+  ]
+}
+```
+
+#### title
+
+- Type: `string`
+
+Title of the list. If this left blank, capitalized `path` is used.
+
+#### path
+
+- Type: `string`
+
+Path the link leads to. Both of internal and external links are allowed. If
+`items` is present, this key is skipped.
+
+#### items
+
+- Type: `Array<PageLink>`
+
+Nested list items. Each item can have `title` and `path` above, `path` is
+required.
+
+### listPages
+
+- Type: `Array<PageLink>`
 - Default: `[]`
+
+Array of the list pages. Each item can have `title` and `path`.
+
+Example:
+
+```json
+{
+  "listPages": [
+    { "path": "articles" },
+    { "title": "My Products", "path": "products" }
+  ]
+}
+```
+
+#### title
+
+- Type: `string`
+
+Title of the list. If this left blank, capitalized `path` is used.
+
+#### path
+
+- Type: `string`
+
+Path to directory that contains the files to list. This is required.
