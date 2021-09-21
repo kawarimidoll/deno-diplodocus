@@ -4,10 +4,10 @@ export default {
   "description": "Static Asset Server for Deno Deploy",
 
   "navLinks": [
-    { "title": "Docs", "path": "/docs" },
-    { "title": "Examples", "path": "/examples" },
-    { "title": "Lorem", "path": "/lorem" },
-    { "title": "Acknowledgements", "path": "/acknowledgements" },
+    { "path": "docs" },
+    { "path": "examples" },
+    { "path": "lorem" },
+    { "path": "acknowledgements" },
     {
       "title": "Links",
       "items": [
@@ -21,7 +21,7 @@ export default {
   ],
 
   "listPages": [
-    { "title": "Docs", "path": "/docs" },
-    { "title": "Lorem", "path": "/lorem" },
+    { "title": "Docs", "path": "docs" },
+    { "path": "lorem" },
   ],
 };

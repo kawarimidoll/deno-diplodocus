@@ -39,12 +39,21 @@ class MyRenderer extends Renderer {
 
 Marked.setOptions({ renderer: new MyRenderer() });
 
+function toTitle(str: string): string {
+  str = str.replace(/\/|-|_/g, " ").trim();
+  const [first, ...rest] = [...str];
+  return [first.toUpperCase(), ...rest].join("");
+}
+
 function aTag(
   attributes: Record<string, string | number | boolean>,
   ...children: string[]
 ) {
   const { href } = attributes;
-  if (typeof href === "string" && /^https?:\/\//.test(href)) {
+  if (typeof href !== "string") {
+    throw new Error("href must be a string");
+  }
+  if (/^https?:\/\//.test(href)) {
     attributes.target = "_blank";
     attributes.rel = "noopener noreferrer";
 
@@ -65,6 +74,8 @@ function aTag(
         h("line", { x1: "10", y1: "14", x2: "21", y2: "3" }),
       ),
     );
+  } else if (!href.startsWith("/") && !href.startsWith("#")) {
+    attributes.href = "/" + href;
   }
   return h("a", attributes, ...children);
 }
@@ -148,9 +159,6 @@ export class Diplodocus {
   }
 
   async collectList(listPath: string) {
-    if (!/^\/.*/.test(listPath)) {
-      listPath = "/" + listPath;
-    }
     const listDir = `${this.config.sourceDir}${listPath}`;
     // console.log({ listDir });
     const pages: Array<PageLink> = [];
@@ -165,7 +173,7 @@ export class Diplodocus {
       const { content, meta } = Marked.parse(md);
       const title = meta.title ||
         (content.match(/<h1[^>]*>(.*)<\/h1>/) || [])[1] ||
-        basename;
+        toTitle(basename);
 
       pages.push({ title, path: `${listPath}/${basename}` });
     }
@@ -178,7 +186,18 @@ export class Diplodocus {
     this.storedMeta = {};
 
     const { listPages, sourceDir } = this.config;
-    for (const { title, path } of listPages) {
+    for (let { title, path } of listPages) {
+      if (!path) {
+        console.error("path of listPages is required");
+        continue;
+      }
+      if (!/^\/.*/.test(path)) {
+        path = "/" + path;
+      }
+      if (!title) {
+        title = toTitle(path);
+      }
+
       const filePath = `${sourceDir}${path}.md`;
       this.storedMeta[filePath] ||= {};
 
@@ -326,11 +345,14 @@ function genResponseArgs(
 export function genNavbar(links: Array<NavLink>): string {
   return h(
     "ul",
-    ...links.map(({ path, title, items }) =>
-      items
+    ...links.map(({ path, title, items }) => {
+      path ||= "#";
+      title ||= toTitle(path);
+
+      return items
         ? h("li", h("span", title), genNavbar(items))
-        : h("li", aTag({ href: path || "#" }, title))
-    ),
+        : h("li", aTag({ href: path }, title));
+    }),
   );
 }
 function prismJs(path: string) {
