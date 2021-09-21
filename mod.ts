@@ -1,9 +1,10 @@
-import { sortBy } from "https://deno.land/std@0.107.0/collections/mod.ts";
 import {
   httpStatusText,
   lookupMimeType,
   Marked,
+  parseYaml,
   Renderer,
+  sortBy,
   tag as h,
 } from "./deps.ts";
 
@@ -114,16 +115,32 @@ export class Diplodocus {
     this.config = { ...defaultConfig, ...userConfig };
   }
 
-  static async create(userConfig: UserConfig = {}) {
-    const instance = new Diplodocus(userConfig);
-    await instance.processStoredData();
-    return instance;
-  }
-
-  static async load(path: string) {
+  static async load() {
     try {
-      const userConfig = JSON.parse(await Deno.readTextFile(path));
-      return await this.create(userConfig);
+      let userConfig: UserConfig = {};
+
+      const files: string[] = [];
+      for await (const file of Deno.readDir(Deno.cwd())) {
+        if (!file.isFile || !/^diplodocus\.\w{2,4}$/.test(file.name)) {
+          continue;
+        }
+        files.push(file.name);
+      }
+      console.log(files);
+      for (const ext of ["yaml", "yml", "json", "ts"]) {
+        const configFile = `diplodocus.${ext}`;
+        if (files.includes(configFile)) {
+          const loadedData = ext === "ts"
+            ? (await import(`${Deno.cwd()}/${configFile}`)).default
+            : parseYaml(await Deno.readTextFile(configFile));
+          userConfig = loadedData as UserConfig;
+          break;
+        }
+      }
+
+      const instance = new Diplodocus(userConfig);
+      await instance.processStoredData();
+      return instance;
     } catch (error) {
       console.error("Diplodocus load failed");
       throw error;

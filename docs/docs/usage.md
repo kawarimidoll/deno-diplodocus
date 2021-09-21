@@ -1,14 +1,14 @@
 # Usage
 
 1. Import the class `Diplodocus`.
-1. Create an instance.
+1. Create an instance by `await Diplodocus.load()`.
 1. Call the method `handler(request: Request)`.
 
 ```ts
 // server.ts
 import { Diplodocus } from "https://deno.land/x/diplodocus/mod.ts";
 
-const diplodocus = new Diplodocus();
+const diplodocus = await Diplodocus.load();
 
 const port = 8080;
 const listener = Deno.listen({ port });

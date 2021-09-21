@@ -43,7 +43,7 @@ Create `server.ts` like this.
 // server.ts
 import { Diplodocus } from "https://deno.land/x/diplodocus/mod.ts";
 
-const diplodocus = new Diplodocus();
+const diplodocus = await Diplodocus.load();
 
 const port = 8080;
 const listener = Deno.listen({ port });
