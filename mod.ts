@@ -120,8 +120,8 @@ export class Diplodocus {
   storedPages: Record<string, string> = {};
   storedMeta: Record<string, PageMeta> = {};
   config: Config;
+  initialized = false;
 
-  // DO NOT CALL CONSTRUCTOR DIRECTLY!!!
   constructor(userConfig: UserConfig = {}) {
     this.config = { ...defaultConfig, ...userConfig };
   }
@@ -232,6 +232,8 @@ export class Diplodocus {
       storedPages: this.storedPages,
       storedMeta: this.storedMeta,
     });
+
+    this.initialized = true;
   }
 
   async readData(
@@ -282,6 +284,10 @@ export class Diplodocus {
   }
 
   async handler(request: Request) {
+    if (!this.initialized) {
+      console.warn("Call processStoredData() before handler()");
+    }
+
     const url = new URL(request.url);
     const { href, origin, host, hash, search } = url;
     let { pathname } = url;
