@@ -138,13 +138,12 @@ export class Diplodocus {
         files.push(file.name);
       }
       console.log(files);
-      for (const ext of ["yaml", "yml", "json", "ts"]) {
+      for (const ext of ["yaml", "yml", "json"]) {
         const configFile = `diplodocus.${ext}`;
         if (files.includes(configFile)) {
-          const loadedData = ext === "ts"
-            ? (await import(`${Deno.cwd()}/${configFile}`)).default
-            : parseYaml(await Deno.readTextFile(configFile));
-          userConfig = loadedData as UserConfig;
+          userConfig = parseYaml(
+            await Deno.readTextFile(configFile),
+          ) as UserConfig;
           break;
         }
       }

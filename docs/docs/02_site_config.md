@@ -3,8 +3,8 @@
 Diplodocus works without any settings, but there are some configurable options.
 
 Diplodocus accepts YAML, JSON or TypeScript configuration files. The file should
-be `diplodocus.(yaml|yml|json|ts)` in the same directory with the entry point
-file of Deno Deploy such as `server.ts`.
+be `diplodocus.(yaml|yml|json)` in the same directory with the entry point file
+of Deno Deploy such as `server.ts`.
 
 ```sh
 ├── docs/
@@ -13,7 +13,7 @@ file of Deno Deploy such as `server.ts`.
 ```
 
 If there are multiple configuration files, Diplodocus will choose one of them by
-this priority: (high) `yaml` `yml` `json` `ts` (low).
+this priority: (high) `yaml` `yml` `json` (low).
 
 ## Format
 
@@ -31,19 +31,10 @@ sourceDir: docs
 }
 ```
 
-### diplodocus.ts
-
-```ts
-export default {
-  sourceDir: "docs",
-};
-```
-
 ## Available Keys
 
 These values below can be used to configure Diplodocus. All of them are
-optional. If you use function-type key, the configuration file should be a
-TypeScript file.
+optional.
 
 ### sourceDir
 
