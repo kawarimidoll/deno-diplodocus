@@ -17,9 +17,56 @@ class MyRenderer extends Renderer {
       .trim().toLocaleLowerCase();
     return `<h${level} id="${id}">${text}</h${level}>`;
   }
+
+  link(href: string, title: string, text: string): string {
+    if (this.options?.sanitize) {
+      try {
+        const prot = decodeURIComponent(this.options.unescape!(href))
+          .replace(/[^\w:]/g, "").toLowerCase();
+
+        if (/^(javascript|vbscript|data):/.test(prot)) {
+          return text;
+        }
+      } catch (_) {
+        return text;
+      }
+    }
+
+    return aTag({ href, title: title || false }, text);
+  }
 }
 
 Marked.setOptions({ renderer: new MyRenderer() });
+
+function aTag(
+  attributes: Record<string, string | number | boolean>,
+  ...children: string[]
+) {
+  const { href } = attributes;
+  if (typeof href === "string" && /^https?:\/\//.test(href)) {
+    attributes.target = "_blank";
+    attributes.rel = "noopener noreferrer";
+
+    // external-link icon by feather icons
+    // https://github.com/feathericons/feather#svg-sprite
+    children.push(
+      h(
+        "svg",
+        {
+          xmlns: "http://www.w3.org/2000/svg",
+          viewBox: "0 0 24 24",
+          class: "feather",
+        },
+        h("path", {
+          d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6",
+        }),
+        h("polyline", { points: "15 3 21 3 21 9" }),
+        h("line", { x1: "10", y1: "14", x2: "21", y2: "3" }),
+      ),
+    );
+  }
+  return h("a", attributes, ...children);
+}
 
 export const defaultConfig = {
   sourceDir: "docs",
@@ -265,7 +312,7 @@ export function genNavbar(links: Array<NavLink>): string {
     ...links.map(({ path, title, items }) =>
       items
         ? h("li", h("span", title), genNavbar(items))
-        : h("li", h("a", { href: path || "#" }, title))
+        : h("li", aTag({ href: path || "#" }, title))
     ),
   );
 }
@@ -317,6 +364,9 @@ export function renderPage(
   const title = "" + siteName;
   const style = "#table-of-contents{margin:2rem;margin-bottom:0;}" +
     "#neighbors{display:flex;margin-bottom:1rem}#prev,#next{display:block;width:50%}" +
+    ".feather{width:.8rem;height:.8rem;stroke:var(--text-color);stroke-width:2;" +
+    "stroke-linecap:round;stroke-linejoin:round;fill:none;" +
+    "display:inline-block;margin:0 .05rem 0 .15rem;vertical-align:-.1em;}" +
     "#next{margin-left:auto}#prev::before{content:'« '}#next::after{content:' »'}";
   const isRoot = /^https?:\/\/[^\/]+\/?$/.test(pageUrl);
   const pageType = isRoot ? "website" : "article";
@@ -354,7 +404,7 @@ export function renderPage(
       ),
       h(
         "body",
-        h("header", h("h1", h("a", { href: "/" }, siteName))),
+        h("header", h("h1", aTag({ href: "/" }, siteName))),
         h("nav", { id: "header-nav" }, genNavbar(navLinks)),
         tocHtml
           ? h(
@@ -370,14 +420,13 @@ export function renderPage(
           h(
             "div",
             { id: "neighbors" },
-            prev ? h("a", { id: "prev", href: prev.path }, prev.title) : "",
-            next ? h("a", { id: "next", href: next.path }, next.title) : "",
+            prev ? aTag({ id: "prev", href: prev.path }, prev.title) : "",
+            next ? aTag({ id: "next", href: next.path }, next.title) : "",
           ),
           h(
             "div",
             "Powered by ",
-            h(
-              "a",
+            aTag(
               { href: "https://github.com/kawarimidoll/deno-diplodocus" },
               "diplodocus",
             ),
