@@ -90,6 +90,9 @@ export const defaultConfig = {
   twitter: "",
   navLinks: [] as Array<NavLink>,
   listPages: [] as Array<PageLink>,
+  removeDefaultStyles: false,
+  bottomHead: "",
+  bottomBody: "",
 };
 export type Config = typeof defaultConfig;
 export type UserConfig = Partial<Config>;
@@ -360,8 +363,23 @@ export function genNavbar(links: Array<NavLink>): string {
     }),
   );
 }
-function prismJs(path: string) {
-  return `https://cdn.jsdelivr.net/npm/prismjs@1.24.1/${path}`;
+function prismJs(path: string, integrity: string) {
+  let tagName = "link";
+  const cdnHost = "https://cdn.jsdelivr.net/npm/prismjs@1.24.1/";
+  const attr: Record<string, string | boolean> = {
+    crossorigin: "anonymous",
+    integrity,
+  };
+  if (path.endsWith("css")) {
+    attr.rel = "stylesheet";
+    attr.href = `${cdnHost}${path}`;
+  } else {
+    tagName = "script";
+    attr.src = `${cdnHost}${path}`;
+    attr.defer = true;
+  }
+
+  return h(tagName, attr);
 }
 export function renderPage(
   {
@@ -385,6 +403,9 @@ export function renderPage(
     favicon,
     siteImage,
     twitter,
+    removeDefaultStyles,
+    bottomHead,
+    bottomBody,
   } = siteMeta;
 
   let tocMd = "";
@@ -442,17 +463,14 @@ export function renderPage(
         h("meta", { property: "og:image", content: siteImage }),
         h("meta", { name: "twitter:card", content: "summary" }),
         h("meta", { name: "twitter:site", content: twitter }),
-        h("link", {
+        removeDefaultStyles ? "" : h("link", {
           rel: "stylesheet",
           href: "https://cdn.jsdelivr.net/npm/holiday.css@0.9.8",
-        }),
-        h("link", {
-          rel: "stylesheet",
-          href: prismJs("themes/prism-tomorrow.css"),
-          integrity: "sha256-0dkohC9ZEupqWbq0hS5cVR4QQXJ+mp6N2oJyuks6gt0=",
-          crossorigin: "anonymous",
-        }),
-        h("style", style),
+        }) + prismJs(
+          "themes/prism-tomorrow.css",
+          "sha256-0dkohC9ZEupqWbq0hS5cVR4QQXJ+mp6N2oJyuks6gt0=",
+        ) + h("style", style),
+        bottomHead || "",
       ),
       h(
         "body",
@@ -484,18 +502,14 @@ export function renderPage(
             ),
           ),
         ),
-        h("script", {
-          src: prismJs("components/prism-core.min.js"),
-          integrity: "sha256-dz05jjFU9qYuMvQQlE6iWDtNAnEsmu6uMb1vWhKdkEM=",
-          crossorigin: "anonymous",
-          defer: true,
-        }),
-        h("script", {
-          src: prismJs("plugins/autoloader/prism-autoloader.min.js"),
-          integrity: "sha256-sttoa+EIAvFFfeeIkmPn8ypyOOb6no2sZ2NbxtBXgqU=",
-          crossorigin: "anonymous",
-          defer: true,
-        }),
+        removeDefaultStyles ? "" : prismJs(
+          "components/prism-core.min.js",
+          "sha256-dz05jjFU9qYuMvQQlE6iWDtNAnEsmu6uMb1vWhKdkEM=",
+        ) + prismJs(
+          "plugins/autoloader/prism-autoloader.min.js",
+          "sha256-sttoa+EIAvFFfeeIkmPn8ypyOOb6no2sZ2NbxtBXgqU=",
+        ),
+        bottomBody || "",
       ),
     );
 }
