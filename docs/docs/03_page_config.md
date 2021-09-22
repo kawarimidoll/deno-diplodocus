@@ -51,8 +51,8 @@ The link to the next page. This is set automatically in
 
 ### page specified options
 
-These keys are available to override the
-[site global configurations](docs/02_site_config.md).
+These keys are available to **override**
+[the site global configurations](docs/02_site_config.md).
 
 - lang
 - description

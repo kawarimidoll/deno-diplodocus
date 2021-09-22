@@ -16,6 +16,10 @@
 
 - [udd](https://deno.land/x/udd)
 
+## Link Icon
+
+- [Feather icons](https://feathericons.com/)
+
 ## Styling
 
 - [holiday.css](https://holidaycss.js.org/)
