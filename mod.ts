@@ -94,10 +94,11 @@ export const defaultConfig = {
   siteName: "Built by Diplodocus",
   description: "This site is built by Diplodocus",
   favicon: "https://twemoji.maxcdn.com/v/13.1.0/72x72/1f995.png",
-  siteImage: "https://twemoji.maxcdn.com/v/13.1.0/72x72/1f995.png",
+  image: "https://twemoji.maxcdn.com/v/13.1.0/72x72/1f995.png",
   twitter: "",
   navLinks: [] as Array<NavLink>,
   listPages: [] as Array<PageLink>,
+  tocLevels: [2, 3],
   removeDefaultStyles: false,
   bottomHead: "",
   bottomBody: "",
@@ -124,7 +125,15 @@ export type PageMeta = {
   next?: PageLink;
   date?: string;
   tag?: Array<string>;
+  title?: string;
   tocLevels?: Array<number>;
+  lang?: string;
+  description?: string;
+  favicon?: string;
+  image?: string;
+  removeDefaultStyles?: boolean;
+  bottomHead?: string;
+  bottomBody?: string;
 };
 
 export class Diplodocus {
@@ -402,22 +411,25 @@ export function renderPage(
     pageUrl: string;
   },
 ): string {
-  const { tocLevels, prev, next } = pageMeta;
   const {
     lang,
     siteName,
     description,
     navLinks,
     favicon,
-    siteImage,
+    image,
     twitter,
     removeDefaultStyles,
     bottomHead,
     bottomBody,
-  } = siteMeta;
+    tocLevels,
+    prev,
+    next,
+    title,
+  } = { ...siteMeta, ...pageMeta };
 
   let tocMd = "";
-  const levels = (tocLevels || [2, 3]).join("").replace(/[^1-6]/g, "");
+  const levels = tocLevels.join("").replace(/[^1-6]/g, "");
 
   if (levels) {
     const regex = new RegExp(
@@ -440,7 +452,11 @@ export function renderPage(
   console.log({ tocMd, pageMeta, tocHtml });
 
   const viewport = "width=device-width,initial-scale=1.0,minimum-scale=1.0";
-  const title = "" + siteName;
+
+  const pageTitle = title || (content.match(/<h1[^>]*>(.*)<\/h1>/) || [])[1];
+  const htmlTitle = pageTitle && pageTitle != siteName
+    ? pageTitle + " | " + siteName
+    : siteName;
   const style = "#table-of-contents{margin:2rem;margin-bottom:0;}" +
     "#neighbors{display:flex;margin-bottom:1rem}" +
     "#neighbors>#prev,#neighbors>#next{display:block;width:50%}" +
@@ -459,16 +475,16 @@ export function renderPage(
       h(
         "head",
         h("meta", { charset: "UTF-8" }),
-        h("title", title),
+        h("title", htmlTitle),
         h("meta", { name: "viewport", content: viewport }),
         h("meta", { name: "description", content: description }),
         h("link", { rel: "icon", href: favicon }),
         h("meta", { property: "og:url", content: pageUrl }),
         h("meta", { property: "og:type", content: pageType }),
-        h("meta", { property: "og:title", content: title }),
+        h("meta", { property: "og:title", content: htmlTitle }),
         h("meta", { property: "og:description", content: description }),
         h("meta", { property: "og:site_name", content: siteName }),
-        h("meta", { property: "og:image", content: siteImage }),
+        h("meta", { property: "og:image", content: image }),
         h("meta", { name: "twitter:card", content: "summary" }),
         h("meta", { name: "twitter:site", content: twitter }),
         removeDefaultStyles ? "" : h("link", {
