@@ -1,8 +1,27 @@
 # Page Configuration
 
-Each markdown files can have **YAML frontmatter**.
+Each markdown files can have configurations in YAML frontmatter.
+
+## Format
+
+```markdown
+---
+title: First page
+---
+
+# Hello World
+
+This is my awesome message.
+```
 
 ## Available keys
+
+### title
+
+- Type: `string`
+- Default: content in first `<h1>` element
+
+Page title.
 
 ### prev
 
@@ -26,11 +45,20 @@ The link to the next page. This is set automatically in
 <!-- ### tag                 -->
 <!-- - Type: `Array<string>` -->
 <!-- - Default: `undefined`  -->
+<!-- ### redirect                             -->
+<!-- - Type: { from: `string`, to: `string` } -->
+<!-- - Default: `undefined`                   -->
 
-### tocLevels
+### page specified options
 
-- Type: `Array<number>`
-- Default: `[2, 3]`
+These keys are available to override the
+[site global configurations](docs/02_site_config.md).
 
-The header levels to show in auto-generated TOC (Table Of Contents). Set this
-`[]` to disable to generate TOC.
+- lang
+- description
+- favicon
+- image
+- tocLevels
+- removeDefaultStyles
+- bottomHead
+- bottomBody

@@ -4,7 +4,7 @@ toc: false
 
 # Diplodocus
 
-Diplodocus is Static Assets Serving System for
+Diplodocus is Static Assets Serving System only for
 [Deno Deploy](https://deno.com/deploy).
 
 "Diplodocus" sounds like "Deploy docs" a little...?
@@ -16,7 +16,7 @@ Diplodocus is Static Assets Serving System for
 
 Create `docs` directly and some markdown pages.
 
-```sh
+```bash
 ├── docs/
 │  ├── about.md
 │  ├── index.md
@@ -37,7 +37,8 @@ Add links in `index.md`.
 - [page 03](/page/03)
 ```
 
-Create `server.ts` like this.
+Create `server.ts`. This is almost same as a sample script of
+[Deno Deploy Beta 2](https://deno.com/blog/deploy-beta2#deno.listen-and-deno.servehttp).
 
 ```ts
 // server.ts
@@ -61,10 +62,11 @@ for await (const conn of listener) {
 }
 ```
 
-Run `server.ts` and access to the local server. You can use `deno run` or
-[deployctl](https://github.com/denoland/deployctl).
+Run `server.ts` by `deno run` or
+[deployctl](https://github.com/denoland/deployctl) and access to the local
+server.
 
-```sh
-$ deno run --allow-net --allow-read ./server.ts
-$ # deplyctl run ./server.ts
+```bash
+$ deno run --allow-net --allow-read --no-check ./server.ts
+$ # deplyctl run --no-check ./server.ts
 ```

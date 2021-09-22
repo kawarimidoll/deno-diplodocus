@@ -6,7 +6,7 @@ Diplodocus accepts YAML, JSON or TypeScript configuration files. The file should
 be `diplodocus.(yaml|yml|json)` in the same directory with the entry point file
 of Deno Deploy such as `server.ts`.
 
-```sh
+```bash
 ├── docs/
 ├── diplodocus.yml
 └── server.ts
@@ -43,6 +43,14 @@ optional.
 
 Directory that served by Diplodocus. This should be relative path from the file
 calling `Diplodocus.load()`.
+
+### rootFile
+
+- Type: `string`
+- Default: `index`
+
+File name without extensions that served when accessed to the root path like
+`https://example.deno.dev`.
 
 ### lang
 
@@ -166,6 +174,14 @@ Title of the list. If this left blank, capitalized `path` is used.
 
 Path to directory that contains the files to list. This also used as path to
 link the page.
+
+### tocLevels
+
+- Type: `Array<number>`
+- Default: `[2, 3]`
+
+The header levels to show in auto-generated TOC (Table Of Contents). Set this
+`[]` to disable to generate TOC.
 
 ### removeDefaultStyles
 
