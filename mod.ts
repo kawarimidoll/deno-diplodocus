@@ -41,6 +41,10 @@ function toTitle(str: string): string {
   return [first.toUpperCase(), ...rest].join("");
 }
 
+function getH1(content: string) {
+  return content.match(/<h1[^>]*>(.*)<\/h1>/)?.at(1) || "";
+}
+
 function aTag(
   attributes: Record<string, string | number | boolean>,
   ...children: string[]
@@ -78,6 +82,7 @@ function aTag(
 
 export const defaultConfig = {
   sourceDir: "docs",
+  rootFile: "index",
   lang: "en",
   siteName: "Built by Diplodocus",
   description: "This site is built by Diplodocus",
@@ -178,9 +183,7 @@ export class Diplodocus {
 
       const md = await Deno.readTextFile(`${listDir}/${name}`);
       const { content, meta } = Marked.parse(md);
-      const title = meta.title ||
-        (content.match(/<h1[^>]*>(.*)<\/h1>/) || [])[1] ||
-        toTitle(basename);
+      const title = meta.title || getH1(content) || toTitle(basename);
 
       pages.push({ title, path: `${listPath}/${basename}` });
     }
@@ -302,7 +305,7 @@ export class Diplodocus {
     console.log({ href, origin, host, pathname, hash, search });
 
     if (pathname === "/") {
-      pathname += "index";
+      pathname += this.config.rootFile;
     } else if (pathname.endsWith("/")) {
       return new Response(
         ...genResponseArgs(302, {
@@ -441,7 +444,7 @@ export function renderPage(
 
   const viewport = "width=device-width,initial-scale=1.0,minimum-scale=1.0";
 
-  const pageTitle = title || (content.match(/<h1[^>]*>(.*)<\/h1>/) || [])[1];
+  const pageTitle = title || getH1(content);
   const htmlTitle = pageTitle && pageTitle != siteName
     ? pageTitle + " | " + siteName
     : siteName;
