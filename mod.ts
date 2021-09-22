@@ -35,13 +35,21 @@ class MyRenderer extends Renderer {
 
     return aTag({ href, title: title || false }, text);
   }
+
+  image(src: string, title: string, alt: string): string {
+    return h("figure", h("img", { src, alt, title: title || false }));
+  }
+
+  text(text: string): string {
+    return /^https?:\/\//.test(text) ? aTag({ href: text }, text) : text;
+  }
 }
 
 Marked.setOptions({ renderer: new MyRenderer() });
 
 function toTitle(str: string): string {
   str = str.replace(/\/|-|_/g, " ").trim();
-  const [first, ...rest] = [...str];
+  const [first, ...rest] = [...str.toLowerCase()];
   return [first.toUpperCase(), ...rest].join("");
 }
 
