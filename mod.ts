@@ -12,32 +12,20 @@ import {
 class MyRenderer extends Renderer {
   heading(text: string, level: number) {
     const id = String(text)
-      .replace(/^<[^>]*>/, "")
-      .replace(/<\/[^>]*>$/, "")
-      .replace(/\s+|<[^>]*>/g, "-")
+      .replace(/^(<.+?>)+/, "")
+      .replace(/(<[^>]+>)+$/, "")
+      .replace(/\s+|(<[^>]*>)+/g, "-")
       .trim().toLocaleLowerCase();
-    return `<h${level} id="${id}">${text}</h${level}>`;
+    return h(`h${level}`, { id }, text);
   }
 
   link(href: string, title: string, text: string): string {
-    if (this.options?.sanitize) {
-      try {
-        const prot = decodeURIComponent(this.options.unescape!(href))
-          .replace(/[^\w:]/g, "").toLowerCase();
-
-        if (/^(javascript|vbscript|data):/.test(prot)) {
-          return text;
-        }
-      } catch (_) {
-        return text;
-      }
-    }
-
     return aTag({ href, title: title || false }, text);
   }
 
   image(src: string, title: string, alt: string): string {
-    return h("figure", h("img", { src, alt, title: title || false }));
+    const loading = "lazy";
+    return h("figure", h("img", { src, alt, title: title || false, loading }));
   }
 
   text(text: string): string {
