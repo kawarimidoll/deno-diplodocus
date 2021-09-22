@@ -53,12 +53,11 @@ export type PageMeta = {
 };
 
 export class Diplodocus {
-  storedPages: Record<string, string> = {};
-  storedMeta: Record<string, PageMeta> = {};
-  config: Config;
-  initialized = false;
+  private storedPages: Record<string, string> = {};
+  private storedMeta: Record<string, PageMeta> = {};
+  private config: Config;
 
-  constructor(userConfig: UserConfig = {}) {
+  private constructor(userConfig: UserConfig = {}) {
     this.config = { ...defaultConfig, ...userConfig };
   }
 
@@ -73,7 +72,7 @@ export class Diplodocus {
         }
         files.push(file.name);
       }
-      console.log(files);
+      // console.log(files);
       for (const ext of ["yaml", "yml", "json"]) {
         const configFile = `diplodocus.${ext}`;
         if (files.includes(configFile)) {
@@ -93,7 +92,10 @@ export class Diplodocus {
     }
   }
 
-  async collectList(listPath: string, sortKey: "path" | "title" = "path") {
+  private async collectList(
+    listPath: string,
+    sortKey: "path" | "title" = "path",
+  ) {
     const listDir = `${this.config.sourceDir}${listPath}`;
     // console.log({ listDir });
     const pages: Array<PageLink> = [];
@@ -115,7 +117,7 @@ export class Diplodocus {
     return sortBy(pages, (page) => page[sortKey]);
   }
 
-  async processStoredData() {
+  private async processStoredData() {
     this.storedPages = {};
     this.storedMeta = {};
 
@@ -166,11 +168,9 @@ export class Diplodocus {
       storedPages: this.storedPages,
       storedMeta: this.storedMeta,
     });
-
-    this.initialized = true;
   }
 
-  async readData(
+  private async readData(
     filePath: string,
     pageUrl: string,
     parseMd = false,
@@ -218,10 +218,6 @@ export class Diplodocus {
   }
 
   async handler(request: Request) {
-    if (!this.initialized) {
-      console.warn("Call processStoredData() before handler()");
-    }
-
     const url = new URL(request.url);
     const { href, origin, host, hash, search } = url;
     let { pathname } = url;
