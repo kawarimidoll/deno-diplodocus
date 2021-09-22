@@ -164,4 +164,28 @@ Title of the list. If this left blank, capitalized `path` is used.
 
 - Type: `string`
 
-Path to directory that contains the files to list. This is required.
+Path to directory that contains the files to list. This also used as path to
+link the page.
+
+### removeDefaultStyles
+
+- Type: `boolean`
+- Default: `false`
+
+Flag to remove all default styles.
+
+### bottomHead
+
+- Type: `string`
+- Default: blank
+
+String to put into bottom of `<head>` tag without sanitization. Use it to append
+some tags.
+
+### bottomBody
+
+- Type: `string`
+- Default: blank
+
+String to put into bottom of `<head>` tag without sanitization. Use it to append
+some tags.
