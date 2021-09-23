@@ -1,6 +1,6 @@
 import { lookupMimeType, parseYaml, sortBy } from "./deps.ts";
 import { Marked } from "./marked.ts";
-import { genResponseArgs, getH1, toTitle } from "./util.ts";
+import { genResponseArgs, getH1, toTitle } from "./utils.ts";
 import { renderPage } from "./render.ts";
 
 export const defaultConfig = {

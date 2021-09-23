@@ -7,7 +7,8 @@ export function toTitle(str: string): string {
 }
 
 export function getH1(content: string) {
-  return content.match(/<h1[^>]*>(.*)<\/h1>/)?.at(1) || "";
+  const h1 = content.match(/<h1[^>]*>(.*?)<\/h1>/)?.at(1) || "";
+  return h1.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
 export function aTag(

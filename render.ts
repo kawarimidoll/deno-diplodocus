@@ -1,7 +1,7 @@
 import { tag as h } from "./deps.ts";
 import { Marked } from "./marked.ts";
 import { Config, NavLink, PageMeta } from "./mod.ts";
-import { aTag, getH1, toTitle } from "./util.ts";
+import { aTag, getH1, toTitle } from "./utils.ts";
 
 export function genNavbar(links: Array<NavLink>): string {
   return h(

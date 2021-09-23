@@ -1,5 +1,5 @@
 import { Marked, Renderer, tag as h } from "./deps.ts";
-import { aTag } from "./util.ts";
+import { aTag } from "./utils.ts";
 
 // https://github.com/ts-stack/markdown/blob/5b6145bf713b928b510770df8ee57d3d48d36b9c/projects/markdown/src/renderer.ts
 class MyRenderer extends Renderer {
