@@ -38,6 +38,8 @@ scripts:
   test:
     desc: Runs the tests
     cmd: deno test --reload
+    allow:
+      - net
     gitHook: pre-push
 
   cov:
