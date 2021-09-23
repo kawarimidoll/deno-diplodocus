@@ -173,9 +173,9 @@ export class Diplodocus {
   private async readData(
     filePath: string,
     pageUrl: string,
-    parseMd = false,
+    tryParse = false,
   ): Promise<BodyInit> {
-    console.log({ filePath, parseMd });
+    console.log({ filePath, tryParse });
     const storedPage = this.storedPages[filePath];
     if (storedPage) {
       const { content, meta } = Marked.parse(storedPage);
@@ -188,7 +188,7 @@ export class Diplodocus {
     try {
       const data = await Deno.readFile(filePath);
 
-      if (filePath.endsWith(".md") && parseMd) {
+      if (filePath.endsWith(".md") && tryParse) {
         const md = new TextDecoder().decode(data);
         const storedMeta = this.storedMeta[filePath] || {};
         const { content, meta } = Marked.parse(md);
