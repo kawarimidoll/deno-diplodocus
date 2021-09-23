@@ -2,6 +2,7 @@ import { tag as h } from "./deps.ts";
 import { Marked } from "./marked.ts";
 import { Config, NavLink, PageMeta } from "./mod.ts";
 import { aTag, getH1, toTitle } from "./utils.ts";
+import { PageLink } from "./mod.ts";
 
 export function genNavbar(links: Array<NavLink>): string {
   return h(
@@ -36,6 +37,63 @@ export function prismJs(path: string, integrity: string) {
   return h(tagName, attr);
 }
 
+export function getPageType(pageUrl: string) {
+  return /^https?:\/\/[^\/]+\/?$/.test(pageUrl) ? "website" : "article";
+}
+
+export function genToc(tocLevels: Array<number>, content: string) {
+  const levels = tocLevels.join("").replace(/[^1-6]/g, "");
+
+  if (!levels) {
+    return "";
+  }
+
+  const regex = new RegExp(
+    `<h([${levels}]) [^>]*id="([^"]+)"[^>]*>(.*?)<\/h[${levels}]>`,
+    "g",
+  );
+  let minLevel = 6;
+
+  const tocMd = (content.match(regex) || []).map((matched) => {
+    const [levelStr, id] = (matched.replace(regex, "$1 $2") || "").split(" ");
+    const level = Number(levelStr);
+    if (level < minLevel) {
+      minLevel = level;
+    }
+    const text = matched.replace(/<[^>]*>/g, "");
+    return `${"  ".repeat(level)}- [${text}](#${id})`;
+  }).map((str) => str.slice(minLevel * 2)).join("\n");
+
+  const tocHtml = Marked.parse(tocMd).content;
+
+  return tocHtml
+    ? h(
+      "details",
+      { id: "table-of-contents" },
+      h("summary", "Table of contents"),
+      tocHtml.replace(/\n/g, ""),
+    )
+    : "";
+}
+
+export function genPageLink(
+  page?: PageLink,
+  attributes?: Record<string, string | number | boolean>,
+) {
+  return page ? aTag({ ...attributes, href: page.path }, page.title) : "";
+}
+
+export function processTitle(
+  pageTitle: string,
+  siteName: string,
+  content: string,
+) {
+  pageTitle ||= getH1(content);
+  return pageTitle && pageTitle != siteName
+    ? pageTitle + " | " + siteName
+    : siteName;
+}
+
 export function renderPage(
   {
     content,
@@ -63,38 +121,14 @@ export function renderPage(
     tocLevels,
     prev,
     next,
-    title,
+    title: pageTitle,
   } = { ...siteMeta, ...pageMeta };
 
-  let tocMd = "";
-  const levels = tocLevels.join("").replace(/[^1-6]/g, "");
-
-  if (levels) {
-    const regex = new RegExp(
-      `<h([${levels}]) [^>]*id="([^"]+)"[^>]*>(.*?)<\/h[${levels}]>`,
-      "g",
-    );
-    let minLevel = 6;
-
-    tocMd = (content.match(regex) || []).map((matched) => {
-      const [levelStr, id] = (matched.replace(regex, "$1 $2") || "").split(" ");
-      const level = Number(levelStr);
-      if (level < minLevel) {
-        minLevel = level;
-      }
-      const text = matched.replace(/<[^>]*>/g, "");
-      return `${"  ".repeat(level)}- [${text}](#${id})`;
-    }).map((str) => str.slice(minLevel * 2)).join("\n");
-  }
-  const tocHtml = Marked.parse(tocMd).content;
-  console.log({ tocMd, pageMeta, tocHtml });
+  const tocHtml = genToc(tocLevels, content);
+  // console.log({ pageMeta, tocHtml });
 
   const viewport = "width=device-width,initial-scale=1.0,minimum-scale=1.0";
-
-  const pageTitle = title || getH1(content);
-  const htmlTitle = pageTitle && pageTitle != siteName
-    ? pageTitle + " | " + siteName
-    : siteName;
+  const title = processTitle(pageTitle || "", siteName, content);
   const style = "#table-of-contents{margin:2rem;margin-bottom:0;}" +
     "#neighbors{display:flex;margin-bottom:1rem}" +
     "#neighbors>#prev,#neighbors>#next{display:block;width:50%}" +
@@ -103,8 +137,6 @@ export function renderPage(
     ".feather{width:.8rem;height:.8rem;stroke:var(--text-color);stroke-width:2;" +
     "stroke-linecap:round;stroke-linejoin:round;fill:none;" +
     "display:inline-block;margin:0 .05rem 0 .15rem;vertical-align:-.1em;}";
-  const isRoot = /^https?:\/\/[^\/]+\/?$/.test(pageUrl);
-  const pageType = isRoot ? "website" : "article";
 
   return "<!DOCTYPE html>" +
     h(
@@ -113,13 +145,13 @@ export function renderPage(
       h(
         "head",
         h("meta", { charset: "UTF-8" }),
-        h("title", htmlTitle),
+        h("title", title),
         h("meta", { name: "viewport", content: viewport }),
         h("meta", { name: "description", content: description }),
         h("link", { rel: "icon", href: favicon }),
         h("meta", { property: "og:url", content: pageUrl }),
-        h("meta", { property: "og:type", content: pageType }),
-        h("meta", { property: "og:title", content: htmlTitle }),
+        h("meta", { property: "og:type", content: getPageType(pageUrl) }),
+        h("meta", { property: "og:title", content: title }),
         h("meta", { property: "og:description", content: description }),
         h("meta", { property: "og:site_name", content: siteName }),
         h("meta", { property: "og:image", content: image }),
@@ -138,29 +170,22 @@ export function renderPage(
         "body",
         h("header", h("h1", aTag({ href: "/" }, siteName))),
         h("nav", { id: "header-nav" }, genNavbar(navLinks)),
-        tocHtml
-          ? h(
-            "details",
-            { id: "table-of-contents" },
-            h("summary", "Table of contents"),
-            tocHtml,
-          )
-          : "",
+        tocHtml,
         h("main", content),
         h(
           "footer",
           h(
             "div",
             { id: "neighbors" },
-            prev ? aTag({ id: "prev", href: prev.path }, prev.title) : "",
-            next ? aTag({ id: "next", href: next.path }, next.title) : "",
+            genPageLink(prev, { id: "prev" }),
+            genPageLink(next, { id: "next" }),
           ),
           h(
             "div",
             "Powered by ",
             aTag(
               { href: "https://github.com/kawarimidoll/deno-diplodocus" },
-              "diplodocus",
+              "Diplodocus",
             ),
           ),
         ),
