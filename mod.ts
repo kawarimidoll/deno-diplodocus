@@ -55,10 +55,10 @@ export type PageMeta = {
 export class Diplodocus {
   private storedPages: Record<string, string> = {};
   private storedMeta: Record<string, PageMeta> = {};
-  private config: Config;
+  private siteMeta: Config;
 
   private constructor(userConfig: UserConfig = {}) {
-    this.config = { ...defaultConfig, ...userConfig };
+    this.siteMeta = { ...defaultConfig, ...userConfig };
   }
 
   static async load() {
@@ -96,7 +96,7 @@ export class Diplodocus {
     listPath: string,
     sortKey: "path" | "title" = "path",
   ) {
-    const listDir = `${this.config.sourceDir}${listPath}`;
+    const listDir = `${this.siteMeta.sourceDir}${listPath}`;
     // console.log({ listDir });
     const pages: Array<PageLink> = [];
     for await (const page of Deno.readDir(listDir)) {
@@ -121,7 +121,7 @@ export class Diplodocus {
     this.storedPages = {};
     this.storedMeta = {};
 
-    const { listPages, sourceDir } = this.config;
+    const { listPages, sourceDir } = this.siteMeta;
     for (let { title, path } of listPages) {
       if (!path) {
         console.error("path of listPages is required");
@@ -163,11 +163,11 @@ export class Diplodocus {
       });
     }
 
-    console.log({
-      listPages,
-      storedPages: this.storedPages,
-      storedMeta: this.storedMeta,
-    });
+    // console.log({
+    //   listPages,
+    //   storedPages: this.storedPages,
+    //   storedMeta: this.storedMeta,
+    // });
   }
 
   private async readData(
@@ -176,13 +176,16 @@ export class Diplodocus {
     tryParse = false,
   ): Promise<BodyInit> {
     console.log({ filePath, tryParse });
+
+    const siteMeta = this.siteMeta;
     const storedPage = this.storedPages[filePath];
+
     if (storedPage) {
       const { content, meta } = Marked.parse(storedPage);
       const storedMeta = this.storedMeta[filePath] || {};
       const pageMeta = { ...storedMeta, ...meta };
       console.log({ meta, pageMeta });
-      return renderPage({ content, pageMeta, siteMeta: this.config, pageUrl });
+      return renderPage({ content, pageMeta, siteMeta, pageUrl });
     }
 
     try {
@@ -196,12 +199,7 @@ export class Diplodocus {
         const pageMeta = { ...storedMeta, ...meta };
         console.log({ meta, pageMeta });
 
-        return renderPage({
-          content,
-          pageMeta,
-          siteMeta: this.config,
-          pageUrl,
-        });
+        return renderPage({ content, pageMeta, siteMeta, pageUrl });
       }
 
       return data;
@@ -225,7 +223,7 @@ export class Diplodocus {
     console.log({ href, origin, host, pathname, hash, search });
 
     if (pathname === "/") {
-      pathname += this.config.rootFile;
+      pathname += this.siteMeta.rootFile;
     } else if (pathname.endsWith("/")) {
       return new Response(
         ...genResponseArgs(302, {
@@ -243,7 +241,7 @@ export class Diplodocus {
     }
 
     const mimeType = lookupMimeType(ext);
-    const filePath = `${this.config.sourceDir}${pathname}`;
+    const filePath = `${this.siteMeta.sourceDir}${pathname}`;
 
     console.log({ pathname, ext, mimeType, filePath });
 
