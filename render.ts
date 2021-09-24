@@ -83,52 +83,35 @@ export function genPageLink(
   return page ? aTag({ ...attributes, href: page.path }, page.title) : "";
 }
 
-export function processTitle(
-  pageTitle: string,
-  siteName: string,
-  content: string,
-) {
-  pageTitle ||= getH1(content);
-  return pageTitle && pageTitle != siteName
-    ? pageTitle + " | " + siteName
-    : siteName;
+export function processTitle(title: string, siteName: string) {
+  return title && title != siteName ? title + " | " + siteName : siteName;
 }
 
-export function renderPage(
-  {
-    content,
-    pageMeta,
-    siteMeta,
-    pageUrl,
-  }: {
-    content: string;
-    pageMeta: PageMeta;
-    siteMeta: Config;
-    pageUrl: string;
-  },
-): string {
-  const {
-    lang,
-    siteName,
-    description,
-    navLinks,
-    favicon,
-    image,
-    twitter,
-    removeDefaultStyles,
-    bottomHead,
-    bottomBody,
-    tocLevels,
-    prev,
-    next,
-    title: pageTitle,
-  } = { ...siteMeta, ...pageMeta };
-
-  const tocHtml = genToc(tocLevels, content);
-  // console.log({ pageMeta, tocHtml });
-
+export function genHead({
+  content,
+  pageUrl,
+  siteName,
+  description,
+  favicon,
+  image,
+  twitter,
+  removeDefaultStyles = false,
+  bottomHead = "",
+  title = "",
+}: {
+  content: string;
+  pageUrl: string;
+  siteName: string;
+  description: string;
+  favicon: string;
+  image: string;
+  twitter: string;
+  removeDefaultStyles: boolean;
+  bottomHead: string;
+  title?: string;
+}): string {
   const viewport = "width=device-width,initial-scale=1.0,minimum-scale=1.0";
-  const title = processTitle(pageTitle || "", siteName, content);
+  const pageTitle = processTitle(title || getH1(content), siteName);
   const style = "#table-of-contents{margin:2rem;margin-bottom:0;}" +
     "#neighbors{display:flex;margin-bottom:1rem}" +
     "#neighbors>#prev,#neighbors>#next{display:block;width:50%}" +
@@ -138,65 +121,100 @@ export function renderPage(
     "stroke-linecap:round;stroke-linejoin:round;fill:none;" +
     "display:inline-block;margin:0 .05rem 0 .15rem;vertical-align:-.1em;}";
 
-  return "<!DOCTYPE html>" +
+  return h(
+    "head",
+    h("meta", { charset: "UTF-8" }),
+    h("title", pageTitle),
+    h("meta", { name: "viewport", content: viewport }),
+    h("meta", { name: "description", content: description }),
+    h("link", { rel: "icon", href: favicon }),
+    h("meta", { property: "og:url", content: pageUrl }),
+    h("meta", { property: "og:type", content: getPageType(pageUrl) }),
+    h("meta", { property: "og:title", content: pageTitle }),
+    h("meta", { property: "og:description", content: description }),
+    h("meta", { property: "og:site_name", content: siteName }),
+    h("meta", { property: "og:image", content: image }),
+    h("meta", { name: "twitter:card", content: "summary" }),
+    h("meta", { name: "twitter:site", content: twitter }),
+    removeDefaultStyles ? "" : h("link", {
+      rel: "stylesheet",
+      href: "https://cdn.jsdelivr.net/npm/holiday.css@0.9.8",
+    }) + prismJs(
+      "themes/prism-tomorrow.css",
+      "sha256-0dkohC9ZEupqWbq0hS5cVR4QQXJ+mp6N2oJyuks6gt0=",
+    ) + h("style", style),
+    bottomHead,
+  );
+}
+
+export function genNeighbors(
+  { prev, next }: { prev?: PageLink; next?: PageLink },
+) {
+  return prev || next
+    ? h(
+      "div",
+      { id: "neighbors" },
+      genPageLink(prev, { id: "prev" }),
+      genPageLink(next, { id: "next" }),
+    )
+    : "";
+}
+
+export function genBody({
+  content,
+  siteName,
+  navLinks = [],
+  removeDefaultStyles = false,
+  bottomBody = "",
+  tocLevels = [],
+  prev,
+  next,
+}: {
+  content: string;
+  siteName: string;
+  navLinks: Array<NavLink>;
+  removeDefaultStyles: boolean;
+  bottomBody: string;
+  tocLevels: Array<number>;
+  prev?: PageLink;
+  next?: PageLink;
+}): string {
+  const href = "https://github.com/kawarimidoll/deno-diplodocus";
+  return h(
+    "body",
+    h("header", h("h1", aTag({ href: "/" }, siteName))),
+    h("nav", { id: "header-nav" }, genNavbar(navLinks)),
+    genToc(tocLevels, content),
+    h("main", content),
     h(
-      "html",
-      { lang },
-      h(
-        "head",
-        h("meta", { charset: "UTF-8" }),
-        h("title", title),
-        h("meta", { name: "viewport", content: viewport }),
-        h("meta", { name: "description", content: description }),
-        h("link", { rel: "icon", href: favicon }),
-        h("meta", { property: "og:url", content: pageUrl }),
-        h("meta", { property: "og:type", content: getPageType(pageUrl) }),
-        h("meta", { property: "og:title", content: title }),
-        h("meta", { property: "og:description", content: description }),
-        h("meta", { property: "og:site_name", content: siteName }),
-        h("meta", { property: "og:image", content: image }),
-        h("meta", { name: "twitter:card", content: "summary" }),
-        h("meta", { name: "twitter:site", content: twitter }),
-        removeDefaultStyles ? "" : h("link", {
-          rel: "stylesheet",
-          href: "https://cdn.jsdelivr.net/npm/holiday.css@0.9.8",
-        }) + prismJs(
-          "themes/prism-tomorrow.css",
-          "sha256-0dkohC9ZEupqWbq0hS5cVR4QQXJ+mp6N2oJyuks6gt0=",
-        ) + h("style", style),
-        bottomHead || "",
-      ),
-      h(
-        "body",
-        h("header", h("h1", aTag({ href: "/" }, siteName))),
-        h("nav", { id: "header-nav" }, genNavbar(navLinks)),
-        tocHtml,
-        h("main", content),
-        h(
-          "footer",
-          h(
-            "div",
-            { id: "neighbors" },
-            genPageLink(prev, { id: "prev" }),
-            genPageLink(next, { id: "next" }),
-          ),
-          h(
-            "div",
-            "Powered by ",
-            aTag(
-              { href: "https://github.com/kawarimidoll/deno-diplodocus" },
-              "Diplodocus",
-            ),
-          ),
-        ),
-        removeDefaultStyles ? "" : prismJs(
-          "components/prism-core.min.js",
-          "sha256-dz05jjFU9qYuMvQQlE6iWDtNAnEsmu6uMb1vWhKdkEM=",
-        ) + prismJs(
-          "plugins/autoloader/prism-autoloader.min.js",
-          "sha256-sttoa+EIAvFFfeeIkmPn8ypyOOb6no2sZ2NbxtBXgqU=",
-        ),
-        bottomBody || "",
-      ),
-    );
+      "footer",
+      genNeighbors({ prev, next }),
+      h("div", "Powered by ", aTag({ href }, "Diplodocus")),
+    ),
+    removeDefaultStyles ? "" : prismJs(
+      "components/prism-core.min.js",
+      "sha256-dz05jjFU9qYuMvQQlE6iWDtNAnEsmu6uMb1vWhKdkEM=",
+    ) + prismJs(
+      "plugins/autoloader/prism-autoloader.min.js",
+      "sha256-sttoa+EIAvFFfeeIkmPn8ypyOOb6no2sZ2NbxtBXgqU=",
+    ),
+    bottomBody,
+  );
+}
+
+export function renderPage({
+  content,
+  pageMeta,
+  siteMeta,
+  pageUrl,
+}: {
+  content: string;
+  pageMeta: PageMeta;
+  siteMeta: Config;
+  pageUrl: string;
+}): string {
+  const config = { content, pageUrl, ...siteMeta, ...pageMeta };
+
+  return "<!DOCTYPE html>" +
+    h("html", { lang: config.lang }, genHead(config), genBody(config));
 }
