@@ -35,6 +35,8 @@ scripts:
   test:
     desc: Runs the tests
     cmd: deno test --reload
+    env:
+      - DENO_DEPLOYMENT_ID: 1
     gitHook: pre-push
 
   cov:

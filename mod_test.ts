@@ -24,7 +24,7 @@ function filesToReadDirResponse(files: string[]): AsyncIterable<Deno.DirEntry> {
 const originalReadDir = Deno.readDir;
 const originalReadTextFile = Deno.readTextFile;
 
-Deno.test("[Diplodocus.load()] load json", async () => {
+Deno.test("[Diplodocus] load json", async () => {
   Deno.readDir = (..._: unknown[]) =>
     filesToReadDirResponse(["server.ts", "diplodocus.json"]);
   Deno.readTextFile = (..._: unknown[]): Promise<string> =>
@@ -45,7 +45,7 @@ Deno.test("[Diplodocus.load()] load json", async () => {
   Deno.readTextFile = originalReadTextFile;
 });
 
-Deno.test("[Diplodocus.load()] load yaml", async () => {
+Deno.test("[Diplodocus] load yaml", async () => {
   Deno.readDir = (..._: unknown[]) =>
     filesToReadDirResponse(["server.ts", "diplodocus.yaml", "diplodocus.json"]);
   Deno.readTextFile = (..._: unknown[]): Promise<string> =>
@@ -66,7 +66,7 @@ Deno.test("[Diplodocus.load()] load yaml", async () => {
   Deno.readTextFile = originalReadTextFile;
 });
 
-Deno.test("[Diplodocus.load()] collectList", async () => {
+Deno.test("[Diplodocus] collectList", async () => {
   Deno.readDir = (..._: unknown[]) =>
     filesToReadDirResponse(["01.md", "image.png", "03.md", "02.md"]);
   Deno.readTextFile = (...args: unknown[]): Promise<string> => {
@@ -99,4 +99,53 @@ Deno.test("[Diplodocus.load()] collectList", async () => {
   );
   Deno.readDir = originalReadDir;
   Deno.readTextFile = originalReadTextFile;
+});
+
+Deno.test("[Diplodocus] handler", async () => {
+  const text = "ok";
+
+  const d = new (Diplodocus as any)();
+  d.readData = (..._: unknown[]): Promise<BodyInit> => {
+    return new Promise((resolve) => {
+      resolve(text);
+    });
+  };
+
+  assert(d);
+
+  let response = await d.handler(new Request("http://host.com"));
+  assert(response);
+  assertEquals(response.ok, true);
+  assertEquals(response.status, 200);
+  assertEquals(response.headers.get("content-type"), "text/html");
+  assertEquals(await response.text(), text);
+
+  response = await d.handler(new Request("http://host.com/page"));
+  assert(response);
+  assertEquals(response.ok, true);
+  assertEquals(response.status, 200);
+  assertEquals(response.headers.get("content-type"), "text/html");
+  assertEquals(await response.text(), text);
+
+  response = await d.handler(new Request("http://host.com/page.md"));
+  assert(response);
+  assertEquals(response.ok, true);
+  assertEquals(response.status, 200);
+  assertEquals(response.headers.get("content-type"), "text/markdown");
+  assertEquals(await response.text(), text);
+
+  response = await d.handler(new Request("http://host.com/redirects/"));
+  assert(response);
+  assertEquals(response.ok, false);
+  assertEquals(response.status, 302);
+
+  d.readData = (..._: unknown[]): Promise<BodyInit> => {
+    return new Promise((_, reject) => {
+      reject("NotFound: file not found");
+    });
+  };
+  response = await d.handler(new Request("http://host.com/not_exists"));
+  assert(response);
+  assertEquals(response.ok, false);
+  assertEquals(response.status, 404);
 });
