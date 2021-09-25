@@ -1,4 +1,4 @@
-import { lookupMimeType, parseYaml, sortBy } from "./deps.ts";
+import { log, lookupMimeType, parseYaml, sortBy } from "./deps.ts";
 import { Marked } from "./marked.ts";
 import { genResponseArgs, getH1, toTitle } from "./utils.ts";
 import { renderPage } from "./render.ts";
@@ -72,7 +72,8 @@ export class Diplodocus {
         }
         files.push(file.name);
       }
-      // console.log(files);
+      log.debug({ files });
+
       for (const ext of ["yaml", "yml", "json"]) {
         const configFile = `diplodocus.${ext}`;
         if (files.includes(configFile)) {
@@ -87,7 +88,7 @@ export class Diplodocus {
       await instance.processStoredData();
       return instance;
     } catch (error) {
-      console.error("Diplodocus load failed");
+      log.error("Diplodocus load failed");
       throw error;
     }
   }
@@ -97,7 +98,8 @@ export class Diplodocus {
     sortKey: "path" | "title" = "path",
   ) {
     const listDir = `${this.siteMeta.sourceDir}${listPath}`;
-    // console.log({ listDir });
+    log.debug({ listDir });
+
     const pages: Array<PageLink> = [];
     for await (const page of Deno.readDir(listDir)) {
       if (!page.isFile || !/\.md$/.test(page.name)) {
@@ -124,7 +126,7 @@ export class Diplodocus {
     const { listPages, sourceDir } = this.siteMeta;
     for (let { title, path } of listPages) {
       if (!path) {
-        console.error("path of listPages is required");
+        log.error("path of listPages is required");
         continue;
       }
       if (!/^\/.*/.test(path)) {
@@ -138,7 +140,7 @@ export class Diplodocus {
       this.storedMeta[filePath] ||= {};
 
       const pages = await this.collectList(path);
-      console.log({ pages });
+      log.debug({ pages });
 
       // generate list pages
       this.storedPages[filePath] = [
@@ -163,11 +165,11 @@ export class Diplodocus {
       });
     }
 
-    // console.log({
-    //   listPages,
-    //   storedPages: this.storedPages,
-    //   storedMeta: this.storedMeta,
-    // });
+    log.debug({
+      listPages,
+      storedPages: this.storedPages,
+      storedMeta: this.storedMeta,
+    });
   }
 
   private async readData(
@@ -175,7 +177,7 @@ export class Diplodocus {
     pageUrl: string,
     tryParse = false,
   ): Promise<BodyInit> {
-    console.log({ filePath, tryParse });
+    log.debug({ filePath, tryParse });
 
     const siteMeta = this.siteMeta;
     const storedPage = this.storedPages[filePath];
@@ -184,7 +186,7 @@ export class Diplodocus {
       const { content, meta } = Marked.parse(storedPage);
       const storedMeta = this.storedMeta[filePath] || {};
       const pageMeta = { ...storedMeta, ...meta };
-      console.log({ meta, pageMeta });
+      log.debug({ meta, pageMeta });
       return renderPage({ content, pageMeta, siteMeta, pageUrl });
     }
 
@@ -197,7 +199,7 @@ export class Diplodocus {
         const { content, meta } = Marked.parse(md);
 
         const pageMeta = { ...storedMeta, ...meta };
-        console.log({ meta, pageMeta });
+        log.debug({ meta, pageMeta });
 
         return renderPage({ content, pageMeta, siteMeta, pageUrl });
       }
@@ -220,7 +222,7 @@ export class Diplodocus {
     const { href, origin, host, hash, search } = url;
     let { pathname } = url;
 
-    console.log({ href, origin, host, pathname, hash, search });
+    log.debug({ href, origin, host, pathname, hash, search });
 
     if (pathname === "/") {
       pathname += this.siteMeta.rootFile;
@@ -243,20 +245,21 @@ export class Diplodocus {
     const mimeType = lookupMimeType(ext);
     const filePath = `${this.siteMeta.sourceDir}${pathname}`;
 
-    console.log({ pathname, ext, mimeType, filePath });
+    log.debug({ pathname, ext, mimeType, filePath });
 
     if (!mimeType) {
       return new Response(...genResponseArgs(400));
     }
 
     try {
+      log.info(`accessed: ${href}`);
       const data = await this.readData(filePath, href);
 
       return new Response(data, {
         headers: { "content-type": mimeType },
       });
     } catch (error) {
-      console.error(error);
+      log.error(error);
 
       const subject = `${error}`.split(":")[0];
       if (subject === "NotFound") {
