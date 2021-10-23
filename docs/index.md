@@ -11,6 +11,7 @@ Diplodocus is Static Assets Serving System only for
 
 - Serve the assets on the GitHub repository
 - Parse the Markdown files to HTML pages
+- No build files
 
 ## Quick start
 
