@@ -5,6 +5,14 @@
 [![vr scripts](https://badges.velociraptor.run/flat.svg)](https://velociraptor.run)
 [![LICENSE](https://img.shields.io/badge/license-MIT-brightgreen)](LICENSE)
 
+> [!WARNING]
+> **This project is archived and no longer maintained.**
+>
+> Deno Deploy Classic was shut down on 2026-07-20. The documentation site at
+> `https://diplodocus.deno.dev` no longer responds, and the deployment flow this
+> project assumes — `deployctl` on Deploy Classic — no longer exists. The source
+> is kept for reference only.
+
 SSG for Deno Deploy
 
 Now developing with fun!
